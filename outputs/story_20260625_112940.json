@@ -1,0 +1,64 @@
+{
+  "success": true,
+  "status": "completed",
+  "message": "Story processed successfully.",
+  "story": "A young wizard walks through an enchanted forest. A glowing phoenix lands on an ancient tree. Together they discover a hidden crystal castle.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "A young wizard walks through an enchanted forest"
+    },
+    {
+      "scene": 2,
+      "description": "A glowing phoenix lands on an ancient tree"
+    },
+    {
+      "scene": 3,
+      "description": "They discover a hidden crystal castle"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "cinematic fantasy forest, magical lighting, a young wizard walks through an enchanted forest, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    },
+    {
+      "scene": 2,
+      "prompt": "ethereal glow, volumetric lighting, a glowing phoenix lands on an ancient tree, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    },
+    {
+      "scene": 3,
+      "prompt": "ancient castle, epic fantasy atmosphere, they discover a hidden crystal castle, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "success",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_1.png",
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_2.png",
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "image_path": "outputs/images/scene_3.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_3.png",
+      "error": null
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 3,
+    "succeeded": 3,
+    "failed": 0,
+    "skipped": 0
+  }
+}

@@ -1,0 +1,9 @@
+﻿Invoke-RestMethod : The operation has timed out
+At line:2 char:508
++ ... $response = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/generate-st ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (System.Net.HttpWebRequest:HttpWebRequest) [Invoke-RestMethod], WebExc 
+   eption
+    + FullyQualifiedErrorId : WebCmdletWebResponseException,Microsoft.PowerShell.Commands.InvokeRestMethodCommand
+ 
+

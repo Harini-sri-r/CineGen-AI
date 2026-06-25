@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineGen AI</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="navbar">
+      <a class="nav-brand" href="#generate" aria-label="CineGen AI home">
+        <span aria-hidden="true">🎬</span>
+        <span>CineGen AI</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#generate">Generate</a>
+        <a href="#history">History</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="generate" class="hero-section">
+        <div class="hero-copy">
+          <p class="eyebrow">AI Visual Studio</p>
+          <h1>CineGen AI</h1>
+          <p>Transform Stories Into AI Generated Visual Narratives</p>
+        </div>
+
+        <dl class="stats-grid" aria-label="Generation statistics">
+          <div class="stat-card">
+            <dt>Total Stories</dt>
+            <dd id="totalStories">0</dd>
+          </div>
+          <div class="stat-card">
+            <dt>Total Scenes</dt>
+            <dd id="totalScenes">0</dd>
+          </div>
+          <div class="stat-card">
+            <dt>Total Images</dt>
+            <dd id="totalImages">0</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="studio-layout" aria-label="Story generation workspace">
+        <aside class="generator-panel glass-panel">
+          <form id="storyForm" class="story-form">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Generate</p>
+                <h2>Story Input</h2>
+              </div>
+            </div>
+
+            <label for="storyInput">Story</label>
+            <textarea
+              id="storyInput"
+              name="story"
+              rows="12"
+              minlength="12"
+              placeholder="A girl enters a magical forest. She finds a glowing deer. The deer guides her to a waterfall."
+              required
+            ></textarea>
+
+            <div class="field-feedback">
+              <p id="storyHelp">Minimum 12 characters.</p>
+              <p id="storyError" class="field-error" hidden></p>
+            </div>
+
+            <div class="toolbar">
+              <label class="switch-row" for="textOnlyToggle">
+                <input id="textOnlyToggle" name="text_only" type="checkbox" />
+                <span class="switch" aria-hidden="true"></span>
+                <span>Text only</span>
+              </label>
+
+              <button id="generateButton" class="primary-button" type="submit">
+                <span class="button-label">Generate</span>
+                <span class="button-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+
+          <div id="statusPanel" class="status-panel" hidden>
+            <div class="status-header">
+              <strong id="statusTitle">Processing</strong>
+              <span id="statusBadge" class="status-badge">Waiting</span>
+            </div>
+            <p id="statusMessage"></p>
+          </div>
+
+          <div class="progress-panel" aria-label="Generation progress">
+            <ol id="progressSteps" class="progress-steps" aria-live="polite">
+              <li data-step="scenes">Generating scenes...</li>
+              <li data-step="prompts">Creating prompts...</li>
+              <li data-step="images">Generating images...</li>
+              <li data-step="saving">Saving results...</li>
+              <li data-step="completed">Completed</li>
+            </ol>
+          </div>
+        </aside>
+
+        <section class="results-panel" aria-live="polite">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Result Dashboard</p>
+              <h2 id="resultTitle">Ready</h2>
+            </div>
+            <div class="result-actions">
+              <button
+                id="downloadJsonButton"
+                class="secondary-button"
+                type="button"
+                disabled
+              >
+                Download JSON
+              </button>
+              <button
+                id="downloadImagesButton"
+                class="secondary-button"
+                type="button"
+                disabled
+              >
+                Download Generated Images
+              </button>
+              <button
+                id="downloadStoryButton"
+                class="secondary-button"
+                type="button"
+                disabled
+              >
+                Download Story Results
+              </button>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="dashboard-card story-card">
+              <div class="card-header">
+                <span class="card-kicker">Story Card</span>
+              </div>
+              <p id="storyPreview" class="story-preview">
+                Generated story details will appear here.
+              </p>
+            </article>
+
+            <article class="dashboard-card">
+              <div class="card-header">
+                <span class="card-kicker">Scenes Card</span>
+                <span id="sceneCount" class="count-badge">0</span>
+              </div>
+              <div id="scenesList" class="stack-list empty-state">
+                <p>No scenes generated yet.</p>
+              </div>
+            </article>
+
+            <article class="dashboard-card">
+              <div class="card-header">
+                <span class="card-kicker">Prompts Card</span>
+                <span id="promptCount" class="count-badge">0</span>
+              </div>
+              <div id="promptsList" class="stack-list empty-state">
+                <p>No prompts generated yet.</p>
+              </div>
+            </article>
+
+            <article class="dashboard-card images-card">
+              <div class="card-header">
+                <span class="card-kicker">Generated Images Card</span>
+                <span id="imageCount" class="count-badge">0</span>
+              </div>
+              <div id="imagesGallery" class="image-grid empty-state" aria-live="polite">
+                <p>No images generated yet.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section id="history" class="history-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Archive</p>
+            <h2>Story Generation History</h2>
+          </div>
+          <button id="refreshHistoryButton" class="secondary-button" type="button">
+            Refresh History
+          </button>
+        </div>
+
+        <div id="historyList" class="history-grid empty-state">
+          <p>History will appear after your first generation.</p>
+        </div>
+      </section>
+    </main>
+
+    <div
+      id="generationOverlay"
+      class="generation-overlay"
+      role="status"
+      aria-live="polite"
+      hidden
+    >
+      <div class="generation-overlay-content">
+        <span class="generation-overlay-spinner" aria-hidden="true"></span>
+        <p id="overlayMessage">Generating...</p>
+        <ol
+          id="overlayProgressSteps"
+          class="progress-steps overlay-progress-steps"
+          aria-label="Generation progress"
+          aria-live="polite"
+        ></ol>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script src="script.js"></script>
+  </body>
+</html>

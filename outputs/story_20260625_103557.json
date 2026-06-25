@@ -1,0 +1,34 @@
+{
+  "success": true,
+  "status": "completed",
+  "message": "Story processed successfully.",
+  "story": "A small lantern glows beside a quiet river.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "A small lantern glows beside a quiet river"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "flowing river landscape, soft natural light, a small lantern glows beside a quiet river, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "success",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://testserver/outputs/images/scene_1.png",
+      "error": null
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 1,
+    "succeeded": 1,
+    "failed": 0,
+    "skipped": 0
+  }
+}
