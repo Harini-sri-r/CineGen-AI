@@ -1,160 +1,94 @@
-# 🎬 CineGen AI: Multimodal Story-to-Video Generation Using LLMs and AI
+# 🎬 CineGen AI
 
-<div align="center">
+An AI-powered web application that transforms text stories into cinematic videos using Large Language Models, AI image generation, text-to-speech, and automated video composition.
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green?logo=fastapi)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow?logo=javascript)
-![License](https://img.shields.io/badge/License-MIT-orange)
-![Status](https://img.shields.io/badge/Status-Completed-success)
+## ✨ Features
 
-**Transform plain text stories into cinematic AI-generated videos with narration, scene images, and intelligent storytelling.**
-
-</div>
-
----
-
-# 📖 Overview
-
-CineGen AI is an AI-powered multimedia generation platform that converts a simple story into a narrated cinematic video.
-
-The application uses a Large Language Model (Llama 3) to understand the story, divide it into meaningful scenes, generate detailed prompts, create AI images, synthesize narration, and finally compose everything into a professional MP4 video.
-
-Unlike traditional text-to-image generators, CineGen AI produces a complete storytelling experience including:
-
-* 🧠 AI Scene Understanding
-* 🎨 AI Image Generation
-* 🎙️ AI Voice Narration
-* 🎬 Automatic Video Generation
-* 📂 Generation History
-* 📥 Downloadable Videos
+* 🔐 User Authentication (JWT)
+* 📖 AI Story Generation
+* 🧠 Scene Extraction using Llama 3 (Ollama)
+* 🎨 AI Image Generation using Pollinations AI
+* 🎙️ AI Narration using Edge-TTS
+* 🎬 Automatic MP4 Video Generation using MoviePy
+* 📂 Personal Generation History
+* 📊 User Dashboard & Statistics
+* 💾 PostgreSQL Database Integration
+* 📥 Download Images and Videos
 
 ---
 
-# 🚀 Features
+## 🖼️ Screenshots
 
-## ✨ AI Story Processing
+### Dashboard
 
-* Story Validation
-* Scene Extraction using Llama 3
-* Intelligent Prompt Generation
-* Multi-scene Story Understanding
+![Dashboard](screenshots/dashboard.png)
 
----
+### Story Generation
 
-## 🖼️ AI Image Generation
+![Story Generation](screenshots/generation.png)
 
-* Pollinations AI Integration
-* High-quality Scene Images
-* Automatic Placeholder Recovery
-* Image Download Support
+### Generation History
 
----
+![History](screenshots/history.png)
 
-## 🎙️ AI Voice Narration
+### Settings
 
-* Edge-TTS
-* Natural Human-like Voice
-* Scene-wise Audio Generation
+![Settings](screenshots/settings.png)
 
 ---
 
-## 🎬 Video Generation
+## 🛠️ Tech Stack
 
-* MoviePy
-* MP4 Rendering
-* Automatic Scene Timing
-* Fade Transitions
-* Ken Burns Zoom Effect
-* Intro Title
-* End Credits
-* Optional Background Music
-
----
-
-## 🌐 Modern Web Interface
-
-* Responsive UI
-* Progress Tracking
-* Story Dashboard
-* Scene Cards
-* Prompt Viewer
-* Image Gallery
-* Embedded Video Player
-* Download Video
-* Open Video in New Tab
+| Category       | Technologies                      |
+| -------------- | --------------------------------- |
+| Backend        | FastAPI, Python                   |
+| Frontend       | HTML, CSS, JavaScript             |
+| Database       | PostgreSQL                        |
+| AI             | Ollama (Llama 3), Pollinations AI |
+| Text-to-Speech | Edge-TTS                          |
+| Video          | MoviePy, FFmpeg                   |
+| Testing        | Pytest                            |
 
 ---
 
-## 📚 History System
+## 🚀 Getting Started
 
-* Previous Stories
-* Previous Images
-* Previous Videos
-* Statistics Dashboard
-* Replay Generated Videos
+### Clone the repository
 
----
-
-# 🏗️ System Architecture
-
-```text
-                 User Story
-                      │
-                      ▼
-              FastAPI Backend
-                      │
-      ┌───────────────┼───────────────┐
-      │               │               │
-      ▼               ▼               ▼
- Scene Extraction  Prompt Generator  Story Validation
-      │
-      ▼
-  Ollama Llama 3
-      │
-      ▼
- Pollinations AI
-      │
-      ▼
- Scene Images
-      │
-      ▼
- Edge-TTS Narration
-      │
-      ▼
- MoviePy Video Composer
-      │
-      ▼
- MP4 Video Generation
-      │
-      ▼
- Frontend Video Player
+```bash
+git clone https://github.com/Harini-sri-r/CineGen-AI.git
+cd CineGen-AI
 ```
 
----
+### Install dependencies
 
-# 🛠️ Technology Stack
+```bash
+pip install -r requirements.txt
+```
 
-### Backend
+### Configure environment variables
 
-* Python 3.11
-* FastAPI
-* Uvicorn
-* Pydantic
+Create a `.env` file:
 
-### AI & ML
+```env
+DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5432/cinegen_ai
 
-* Ollama Llama 3
-* Pollinations AI
-* Edge-TTS
+JWT_SECRET_KEY=your_secret_key
 
-### Video Processing
+POLLINATIONS_API_KEY=your_api_key
 
-* MoviePy
-* FFmpeg
+OLLAMA_MODEL=llama3
+```
 
-### Frontend
+### Run the application
 
-* HTML5
-* CSS3
-* JavaScript
+```bash
+python -m uvicorn app:app --reload --port 8001
+```
+
+Open the frontend:
+
+```text
+http://127.0.0.1:5500/index.html
+```
+
