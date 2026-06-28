@@ -1,13 +1,18 @@
 """Story generation API routes."""
 
+from datetime import datetime
 import os
 from pathlib import Path
 import traceback
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.concurrency import run_in_threadpool
+from sqlalchemy.orm import Session
 
+from auth_dependencies import get_optional_current_user
+from database import get_db
+from db_models import User
 from models.story import (
     GenerateImageResponse,
     ImageGenerationRequest,
@@ -21,6 +26,11 @@ from services.image_generator import ImageGenerator
 from services.llm_scene_generator import LLMSceneGenerator
 from services.prompt_generator import PromptGenerator
 from services.scene_generator import SceneGenerator
+from services.saas_service import (
+    persist_story_generation,
+    update_story_image_metadata,
+    user_media_dirs,
+)
 from services.story_composer import StoryComposer
 from utils.file_handler import FileHandler, FileSaveError
 from utils.logger import get_logger
@@ -45,7 +55,12 @@ IMAGE_DEFERRED_MESSAGE = "Story and prompts generated. Generate images one scene
     status_code=status.HTTP_200_OK,
     summary="Generate scenes, prompts, images, and save the completed story result",
 )
-async def generate_story(api_request: Request, request: StoryRequest) -> StoryResponse:
+async def generate_story(
+    api_request: Request,
+    request: StoryRequest,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+) -> StoryResponse:
     """Process a story into scenes, prompts, saved images, and JSON output.
 
     Image generation is synchronous by default. The legacy defer_images flag remains
@@ -69,6 +84,9 @@ async def generate_story(api_request: Request, request: StoryRequest) -> StoryRe
         target_duration_seconds=request.target_duration_seconds,
     )
     expanded_from_idea = story != " ".join(user_story.split()).strip()
+    file_name = _build_story_file_name()
+    story_key = Path(file_name).stem
+    active_image_generator = _image_generator_for_user(current_user, story_key)
 
     try:
         scenes = _extract_scenes(story, expanded_from_idea=expanded_from_idea)
@@ -99,14 +117,14 @@ async def generate_story(api_request: Request, request: StoryRequest) -> StoryRe
                     IMAGE_TIMEOUT_SECONDS,
                 )
                 images = await run_in_threadpool(
-                    image_generator.generate_images,
+                    active_image_generator.generate_images,
                     prompts,
                 )
                 logger.info("Image generation completed: %s image records", len(images))
             except Exception as exc:
                 error_trace = traceback.format_exc()
                 logger.exception(error_trace)
-                images = image_generator.build_failed_images(
+                images = active_image_generator.build_failed_images(
                     prompts,
                     error_trace or str(exc),
                 )
@@ -133,8 +151,25 @@ async def generate_story(api_request: Request, request: StoryRequest) -> StoryRe
             target_duration_seconds=request.target_duration_seconds,
             status=response_status,
             message=message,
+            file_name=file_name,
         )
         logger.info("File saved successfully: %s", file_name)
+
+        if current_user is not None:
+            try:
+                persist_story_generation(
+                    db=db,
+                    user=current_user,
+                    file_name=file_name,
+                    story=story,
+                    scenes=scenes,
+                    prompts=prompts,
+                    images=images,
+                    target_duration_seconds=request.target_duration_seconds,
+                    status=response_status,
+                )
+            except Exception:
+                logger.exception("Unable to persist authenticated story metadata")
 
         return StoryResponse(
             success=True,
@@ -173,6 +208,8 @@ async def generate_story(api_request: Request, request: StoryRequest) -> StoryRe
 async def generate_image(
     api_request: Request,
     request: ImageGenerationRequest,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> GenerateImageResponse:
     """Generate one scene image and optionally update a saved story file."""
     logger.info(
@@ -188,8 +225,10 @@ async def generate_image(
             detail="Prompt cannot be empty.",
         )
 
+    story_key = Path(request.file_name).stem if request.file_name else "single-scene"
+    active_image_generator = _image_generator_for_user(current_user, story_key)
     image = await run_in_threadpool(
-        image_generator.generate_image_with_fallback,
+        active_image_generator.generate_image_with_fallback,
         prompt,
         request.scene,
     )
@@ -201,6 +240,8 @@ async def generate_image(
     if request.file_name:
         try:
             file_handler.update_story_image(request.file_name, image)
+            if current_user is not None:
+                update_story_image_metadata(db, current_user, request.file_name, image)
             logger.info(
                 "Saved story image status updated: file=%s scene=%s status=%s",
                 request.file_name,
@@ -370,3 +411,20 @@ def _extract_scenes(story: str, expanded_from_idea: bool) -> list[Scene]:
         return fast_scene_generator.extract_scenes(story)
 
     return scene_generator.extract_scenes(story)
+
+
+def _build_story_file_name() -> str:
+    """Build a legacy-compatible output JSON file name."""
+    return f"story_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+
+
+def _image_generator_for_user(user: User | None, story_key: str) -> ImageGenerator:
+    """Return the global image generator or a user-scoped generator."""
+    if user is None:
+        return image_generator
+
+    media_dirs = user_media_dirs(user, story_key)
+    return ImageGenerator(
+        output_dir=media_dirs["images"],
+        generation_timeout_seconds=IMAGE_TIMEOUT_SECONDS,
+    )

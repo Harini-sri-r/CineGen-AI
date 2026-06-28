@@ -6,227 +6,500 @@
     <title>CineGen AI</title>
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body>
-    <header class="navbar">
-      <a class="nav-brand" href="#generate" aria-label="CineGen AI home">
-        <span aria-hidden="true">🎬</span>
-        <span>CineGen AI</span>
-      </a>
-      <nav class="nav-links" aria-label="Primary navigation">
-        <a href="#generate">Generate</a>
-        <a href="#history">History</a>
-      </nav>
-    </header>
-
-    <main>
-      <section id="generate" class="hero-section">
-        <div class="hero-copy">
-          <p class="eyebrow">AI Visual Studio</p>
+  <body class="light-mode">
+    <section id="authShell" class="auth-shell">
+      <div class="auth-brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+          <p class="eyebrow">AI Video SaaS</p>
           <h1>CineGen AI</h1>
-          <p>Transform Stories Into AI Generated Visual Narratives</p>
         </div>
+      </div>
 
-        <dl class="stats-grid" aria-label="Generation statistics">
-          <div class="stat-card">
-            <dt>Total Stories</dt>
-            <dd id="totalStories">0</dd>
-          </div>
-          <div class="stat-card">
-            <dt>Total Scenes</dt>
-            <dd id="totalScenes">0</dd>
-          </div>
-          <div class="stat-card">
-            <dt>Total Images</dt>
-            <dd id="totalImages">0</dd>
-          </div>
-        </dl>
-      </section>
+      <article id="loginPage" class="auth-card auth-view">
+        <p class="eyebrow">Welcome back</p>
+        <h2>Login</h2>
+        <form id="loginForm" class="auth-form">
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" name="email" type="email" autocomplete="email" required />
 
-      <section class="studio-layout" aria-label="Story generation workspace">
-        <aside class="generator-panel glass-panel">
-          <form id="storyForm" class="story-form" onsubmit="return false;">
-            <div class="section-heading compact">
+          <label for="loginPassword">Password</label>
+          <input
+            id="loginPassword"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+
+          <label class="switch-row auth-remember" for="rememberMeToggle">
+            <input id="rememberMeToggle" name="remember_me" type="checkbox" checked />
+            <span class="switch" aria-hidden="true"></span>
+            <span>Remember me</span>
+          </label>
+
+          <button id="loginButton" class="primary-button" type="submit">Login</button>
+        </form>
+        <div class="auth-links">
+          <button class="text-button" type="button" data-auth-route="/register">
+            Create account
+          </button>
+          <button class="text-button" type="button" data-auth-route="/forgot-password">
+            Forgot password?
+          </button>
+        </div>
+      </article>
+
+      <article id="registerPage" class="auth-card auth-view" hidden>
+        <p class="eyebrow">Start creating</p>
+        <h2>Register</h2>
+        <form id="registerForm" class="auth-form">
+          <label for="registerUsername">Username</label>
+          <input id="registerUsername" name="username" type="text" autocomplete="username" required />
+
+          <label for="registerEmail">Email</label>
+          <input id="registerEmail" name="email" type="email" autocomplete="email" required />
+
+          <label for="registerPassword">Password</label>
+          <input
+            id="registerPassword"
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+          />
+
+          <button id="registerButton" class="primary-button" type="submit">Create account</button>
+        </form>
+        <button class="text-button" type="button" data-auth-route="/login">
+          Back to login
+        </button>
+      </article>
+
+      <article id="forgotPasswordPage" class="auth-card auth-view" hidden>
+        <p class="eyebrow">Account recovery</p>
+        <h2>Forgot Password</h2>
+        <form id="forgotPasswordForm" class="auth-form">
+          <label for="forgotEmail">Email</label>
+          <input id="forgotEmail" name="email" type="email" autocomplete="email" required />
+          <button id="forgotPasswordButton" class="primary-button" type="submit">
+            Send reset link
+          </button>
+        </form>
+        <button class="text-button" type="button" data-auth-route="/login">
+          Back to login
+        </button>
+      </article>
+    </section>
+
+    <div id="appShell" class="saas-shell" hidden>
+      <aside class="sidebar">
+        <a class="sidebar-brand" href="/dashboard" data-route="dashboard" aria-label="CineGen AI dashboard">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>CineGen AI</span>
+        </a>
+
+        <nav class="sidebar-nav" aria-label="Dashboard navigation">
+          <a href="/dashboard" data-route="dashboard">Dashboard</a>
+          <a href="/generate" data-route="generate">Generate Story</a>
+          <a href="/generate" data-route="generate">Generate Images</a>
+          <a href="/generate" data-route="generate">Generate Video</a>
+          <a href="/history-page" data-route="history">History</a>
+          <a href="/images" data-route="images">Image Library</a>
+          <a href="/videos" data-route="videos">Video Library</a>
+          <a href="/profile" data-route="profile">Profile</a>
+          <a href="/settings" data-route="settings">Settings</a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-chip">
+            <span id="sidebarAvatar" class="avatar">C</span>
+            <div>
+              <strong id="sidebarUsername">Creator</strong>
+              <small id="sidebarEmail">creator@example.com</small>
+            </div>
+          </div>
+          <button id="logoutButton" class="secondary-button" type="button">Logout</button>
+        </div>
+      </aside>
+
+      <main class="saas-main">
+        <section id="dashboardPage" class="app-page dashboard-page">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">Dashboard</p>
+              <h1 id="welcomeTitle">Welcome</h1>
+            </div>
+            <button class="primary-button" type="button" data-route-button="generate">
+              Quick Generate
+            </button>
+          </div>
+
+          <dl class="stats-grid dashboard-stats" aria-label="Generation statistics">
+            <div class="stat-card">
+              <dt>Total Stories</dt>
+              <dd id="totalStories">0</dd>
+            </div>
+            <div class="stat-card">
+              <dt>Total Images</dt>
+              <dd id="totalImages">0</dd>
+            </div>
+            <div class="stat-card">
+              <dt>Total Videos</dt>
+              <dd id="totalVideos">0</dd>
+            </div>
+          </dl>
+
+          <div class="dashboard-overview">
+            <article class="dashboard-card">
+              <div class="card-header">
+                <span class="card-kicker">Generation Statistics</span>
+                <span id="totalScenes" class="count-badge">0</span>
+              </div>
+              <div id="statsChart" class="mini-chart"></div>
+            </article>
+
+            <article class="dashboard-card">
+              <div class="card-header">
+                <span class="card-kicker">Latest Activity</span>
+              </div>
+              <div id="latestActivity" class="activity-list empty-state">
+                <p>No activity yet.</p>
+              </div>
+            </article>
+          </div>
+
+          <section>
+            <div class="section-heading">
               <div>
-                <p class="eyebrow">Generate</p>
-                <h2>Story Prompt</h2>
+                <p class="eyebrow">Recent Stories</p>
+                <h2>Continue Creating</h2>
               </div>
             </div>
-
-            <label for="storyInput">Story idea</label>
-            <textarea
-              id="storyInput"
-              name="story"
-              rows="12"
-              minlength="3"
-              placeholder="Princess story, robot friendship, magical forest adventure..."
-              required
-            ></textarea>
-
-            <div class="field-feedback">
-              <p id="storyHelp">Minimum 3 characters.</p>
-              <p id="storyError" class="field-error" hidden></p>
+            <div id="recentStories" class="history-grid empty-state">
+              <p>Recent stories will appear after your first generation.</p>
             </div>
+          </section>
+        </section>
 
-            <div class="toolbar">
-              <div class="generation-options">
-                <label class="switch-row" for="textOnlyToggle">
-                  <input id="textOnlyToggle" name="text_only" type="checkbox" />
-                  <span class="switch" aria-hidden="true"></span>
-                  <span>Text only</span>
-                </label>
+        <section id="generatePage" class="app-page" hidden>
+          <section id="generate" class="hero-section compact-hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Generate</p>
+              <h1>CineGen AI</h1>
+              <p>Transform stories into AI generated images, narration, and MP4 video.</p>
+            </div>
+          </section>
 
-                <label class="duration-field" for="targetDurationInput">
-                  <span>Video length</span>
-                  <input
-                    id="targetDurationInput"
-                    name="target_duration_seconds"
-                    type="number"
-                    min="10"
-                    max="120"
-                    step="5"
-                    value="30"
-                  />
-                  <span>sec</span>
-                </label>
+          <section class="studio-layout" aria-label="Story generation workspace">
+            <aside class="generator-panel glass-panel">
+              <form id="storyForm" class="story-form" onsubmit="return false;">
+                <div class="section-heading compact">
+                  <div>
+                    <p class="eyebrow">Generate</p>
+                    <h2>Story Prompt</h2>
+                  </div>
+                </div>
+
+                <label for="storyInput">Story idea</label>
+                <textarea
+                  id="storyInput"
+                  name="story"
+                  rows="12"
+                  minlength="3"
+                  placeholder="Princess story, robot friendship, magical forest adventure..."
+                  required
+                ></textarea>
+
+                <div class="field-feedback">
+                  <p id="storyHelp">Minimum 3 characters.</p>
+                  <p id="storyError" class="field-error" hidden></p>
+                </div>
+
+                <div class="toolbar">
+                  <div class="generation-options">
+                    <label class="switch-row" for="textOnlyToggle">
+                      <input id="textOnlyToggle" name="text_only" type="checkbox" />
+                      <span class="switch" aria-hidden="true"></span>
+                      <span>Text only</span>
+                    </label>
+
+                    <label class="duration-field" for="targetDurationInput">
+                      <span>Video length</span>
+                      <input
+                        id="targetDurationInput"
+                        name="target_duration_seconds"
+                        type="number"
+                        min="10"
+                        max="120"
+                        step="5"
+                        value="30"
+                      />
+                      <span>sec</span>
+                    </label>
+                  </div>
+
+                  <button id="generateButton" class="primary-button" type="button">
+                    <span class="button-label">Generate</span>
+                    <span class="button-spinner" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </form>
+
+              <div id="statusPanel" class="status-panel" hidden>
+                <div class="status-header">
+                  <strong id="statusTitle">Processing</strong>
+                  <span id="statusBadge" class="status-badge">Waiting</span>
+                </div>
+                <p id="statusMessage"></p>
               </div>
 
-              <button id="generateButton" class="primary-button" type="button">
-                <span class="button-label">Generate</span>
-                <span class="button-spinner" aria-hidden="true"></span>
-              </button>
-            </div>
-          </form>
+              <div class="progress-panel" aria-label="Generation progress">
+                <ol id="progressSteps" class="progress-steps" aria-live="polite">
+                  <li data-step="scenes">Scene Extraction</li>
+                  <li data-step="prompts">Prompt Generation</li>
+                  <li data-step="images">Image Generation</li>
+                  <li data-step="narration">Narration</li>
+                  <li data-step="video">Video Generation</li>
+                  <li data-step="completed">Completed</li>
+                </ol>
+              </div>
+            </aside>
 
-          <div id="statusPanel" class="status-panel" hidden>
-            <div class="status-header">
-              <strong id="statusTitle">Processing</strong>
-              <span id="statusBadge" class="status-badge">Waiting</span>
-            </div>
-            <p id="statusMessage"></p>
-          </div>
+            <section class="results-panel" aria-live="polite">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">Result Dashboard</p>
+                  <h2 id="resultTitle">Ready</h2>
+                </div>
+                <div class="result-actions">
+                  <button id="downloadJsonButton" class="secondary-button" type="button" disabled>
+                    Download JSON
+                  </button>
+                  <button id="downloadImagesButton" class="secondary-button" type="button" disabled>
+                    Download Generated Images
+                  </button>
+                  <button id="downloadStoryButton" class="secondary-button" type="button" disabled>
+                    Download Story Results
+                  </button>
+                  <button id="downloadVideoButton" class="secondary-button" type="button" disabled>
+                    Download MP4
+                  </button>
+                </div>
+              </div>
 
-          <div class="progress-panel" aria-label="Generation progress">
-            <ol id="progressSteps" class="progress-steps" aria-live="polite">
-              <li data-step="scenes">Generating scenes...</li>
-              <li data-step="prompts">Creating prompts...</li>
-              <li data-step="images">Generating images...</li>
-              <li data-step="saving">Saving results...</li>
-              <li data-step="completed">Completed</li>
-            </ol>
-          </div>
-        </aside>
+              <div class="dashboard-grid">
+                <article class="dashboard-card story-card">
+                  <div class="card-header">
+                    <span class="card-kicker">Story Card</span>
+                  </div>
+                  <p id="storyPreview" class="story-preview">
+                    Generated story details will appear here.
+                  </p>
+                </article>
 
-        <section class="results-panel" aria-live="polite">
+                <article class="dashboard-card">
+                  <div class="card-header">
+                    <span class="card-kicker">Scenes Card</span>
+                    <span id="sceneCount" class="count-badge">0</span>
+                  </div>
+                  <div id="scenesList" class="stack-list empty-state">
+                    <p>No scenes generated yet.</p>
+                  </div>
+                </article>
+
+                <article class="dashboard-card">
+                  <div class="card-header">
+                    <span class="card-kicker">Prompts Card</span>
+                    <span id="promptCount" class="count-badge">0</span>
+                  </div>
+                  <div id="promptsList" class="stack-list empty-state">
+                    <p>No prompts generated yet.</p>
+                  </div>
+                </article>
+
+                <article class="dashboard-card images-card">
+                  <div class="card-header">
+                    <span class="card-kicker">Generated Images Card</span>
+                    <span id="imageCount" class="count-badge">0</span>
+                  </div>
+                  <div id="imagesGallery" class="image-grid empty-state" aria-live="polite">
+                    <p>No images generated yet.</p>
+                  </div>
+                </article>
+
+                <article class="dashboard-card video-card">
+                  <div class="card-header">
+                    <span class="card-kicker">Generated Video</span>
+                    <span id="videoStatusBadge" class="count-badge">0:00</span>
+                  </div>
+                  <div id="videoPanel" class="video-panel empty-state" aria-live="polite">
+                    <p>No video generated yet.</p>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </section>
+        </section>
+
+        <section id="history" class="app-page history-section" hidden>
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Result Dashboard</p>
-              <h2 id="resultTitle">Ready</h2>
+              <p class="eyebrow">History</p>
+              <h2>Story Generation History</h2>
             </div>
-            <div class="result-actions">
-              <button
-                id="downloadJsonButton"
-                class="secondary-button"
-                type="button"
-                disabled
-              >
-                Download JSON
-              </button>
-              <button
-                id="downloadImagesButton"
-                class="secondary-button"
-                type="button"
-                disabled
-              >
-                Download Generated Images
-              </button>
-              <button
-                id="downloadStoryButton"
-                class="secondary-button"
-                type="button"
-                disabled
-              >
-                Download Story Results
-              </button>
-              <button
-                id="downloadVideoButton"
-                class="secondary-button"
-                type="button"
-                disabled
-              >
-                Download MP4
-              </button>
+            <button id="refreshHistoryButton" class="secondary-button" type="button">
+              Refresh History
+            </button>
+          </div>
+
+          <div class="library-toolbar">
+            <input id="historySearchInput" type="search" placeholder="Search stories" />
+            <select id="historySortSelect" aria-label="Sort history">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+          </div>
+
+          <div id="historyList" class="history-grid empty-state">
+            <p>History will appear after your first generation.</p>
+          </div>
+          <div id="historyPagination" class="pagination"></div>
+        </section>
+
+        <section id="imageLibraryPage" class="app-page" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Library</p>
+              <h2>Image Library</h2>
+            </div>
+            <select id="imageProviderFilter" aria-label="Filter images">
+              <option value="">All providers</option>
+              <option value="pollinations">Pollinations</option>
+              <option value="fal">fal.ai</option>
+              <option value="huggingface">Hugging Face</option>
+              <option value="storyboard">Storyboard</option>
+            </select>
+          </div>
+          <div id="imageLibraryGrid" class="image-grid empty-state">
+            <p>No images generated yet.</p>
+          </div>
+        </section>
+
+        <section id="videoLibraryPage" class="app-page" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Library</p>
+              <h2>Video Library</h2>
+            </div>
+          </div>
+          <div id="videoLibraryGrid" class="video-library-grid empty-state">
+            <p>No videos generated yet.</p>
+          </div>
+        </section>
+
+        <section id="profilePage" class="app-page" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Profile</p>
+              <h2>Personal Profile</h2>
             </div>
           </div>
 
-          <div class="dashboard-grid">
-            <article class="dashboard-card story-card">
-              <div class="card-header">
-                <span class="card-kicker">Story Card</span>
-              </div>
-              <p id="storyPreview" class="story-preview">
-                Generated story details will appear here.
-              </p>
+          <div class="profile-layout">
+            <article class="dashboard-card profile-card">
+              <span id="profileAvatar" class="profile-avatar">C</span>
+              <h3 id="profileName">Creator</h3>
+              <p id="profileEmail">creator@example.com</p>
+              <p id="profileJoined">Joined today</p>
+              <dl class="profile-stats">
+                <div><dt>Stories Generated</dt><dd id="profileStories">0</dd></div>
+                <div><dt>Images Generated</dt><dd id="profileImages">0</dd></div>
+                <div><dt>Videos Generated</dt><dd id="profileVideos">0</dd></div>
+              </dl>
             </article>
 
             <article class="dashboard-card">
               <div class="card-header">
-                <span class="card-kicker">Scenes Card</span>
-                <span id="sceneCount" class="count-badge">0</span>
+                <span class="card-kicker">Update Profile</span>
               </div>
-              <div id="scenesList" class="stack-list empty-state">
-                <p>No scenes generated yet.</p>
-              </div>
+              <form id="profileForm" class="settings-form">
+                <label for="profileUsername">Username</label>
+                <input id="profileUsername" name="username" type="text" />
+                <label for="profileEmailInput">Email</label>
+                <input id="profileEmailInput" name="email" type="email" />
+                <label for="profilePictureInput">Profile picture URL</label>
+                <input id="profilePictureInput" name="profile_picture" type="url" />
+                <button class="primary-button" type="submit">Update Profile</button>
+              </form>
             </article>
 
             <article class="dashboard-card">
               <div class="card-header">
-                <span class="card-kicker">Prompts Card</span>
-                <span id="promptCount" class="count-badge">0</span>
+                <span class="card-kicker">Change Password</span>
               </div>
-              <div id="promptsList" class="stack-list empty-state">
-                <p>No prompts generated yet.</p>
-              </div>
-            </article>
-
-            <article class="dashboard-card images-card">
-              <div class="card-header">
-                <span class="card-kicker">Generated Images Card</span>
-                <span id="imageCount" class="count-badge">0</span>
-              </div>
-              <div id="imagesGallery" class="image-grid empty-state" aria-live="polite">
-                <p>No images generated yet.</p>
-              </div>
-            </article>
-
-            <article class="dashboard-card video-card">
-              <div class="card-header">
-                <span class="card-kicker">Generated Video</span>
-                <span id="videoStatusBadge" class="count-badge">0:00</span>
-              </div>
-              <div id="videoPanel" class="video-panel empty-state" aria-live="polite">
-                <p>No video generated yet.</p>
-              </div>
+              <form id="passwordForm" class="settings-form">
+                <label for="currentPasswordInput">Current password</label>
+                <input id="currentPasswordInput" type="password" autocomplete="current-password" />
+                <label for="newPasswordInput">New password</label>
+                <input id="newPasswordInput" type="password" autocomplete="new-password" minlength="8" />
+                <button class="secondary-button" type="submit">Change Password</button>
+              </form>
             </article>
           </div>
         </section>
-      </section>
 
-      <section id="history" class="history-section">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Archive</p>
-            <h2>Story Generation History</h2>
+        <section id="settingsPage" class="app-page" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Settings</p>
+              <h2>Workspace Preferences</h2>
+            </div>
           </div>
-          <button id="refreshHistoryButton" class="secondary-button" type="button">
-            Refresh History
-          </button>
-        </div>
 
-        <div id="historyList" class="history-grid empty-state">
-          <p>History will appear after your first generation.</p>
-        </div>
-      </section>
-    </main>
+          <article class="dashboard-card">
+            <form id="settingsForm" class="settings-grid">
+              <label for="themeSelect">Theme</label>
+              <select id="themeSelect" name="theme">
+                <option value="dark">Dark Mode</option>
+                <option value="light">Light Mode</option>
+              </select>
+
+              <label for="languageSelect">Language</label>
+              <select id="languageSelect" name="language">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="es">Spanish</option>
+              </select>
+
+              <label for="voiceSelect">Voice Selection</label>
+              <select id="voiceSelect" name="voice_selection">
+                <option value="en-US-GuyNeural">en-US-GuyNeural</option>
+                <option value="en-US-JennyNeural">en-US-JennyNeural</option>
+                <option value="en-IN-NeerjaNeural">en-IN-NeerjaNeural</option>
+              </select>
+
+              <label for="imageProviderSelect">Image Provider</label>
+              <select id="imageProviderSelect" name="image_provider">
+                <option value="pollinations">Pollinations</option>
+                <option value="fal">fal.ai</option>
+                <option value="huggingface">Hugging Face</option>
+                <option value="storyboard">Storyboard</option>
+              </select>
+
+              <label class="switch-row settings-toggle" for="backgroundMusicToggle">
+                <input id="backgroundMusicToggle" name="background_music_enabled" type="checkbox" />
+                <span class="switch" aria-hidden="true"></span>
+                <span>Background Music</span>
+              </label>
+
+              <button class="primary-button" type="submit">Save Settings</button>
+            </form>
+          </article>
+        </section>
+      </main>
+    </div>
 
     <div
       id="generationOverlay"

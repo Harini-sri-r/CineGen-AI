@@ -17,6 +17,17 @@ def test_frontend_contains_video_dashboard_elements() -> None:
     assert "Download MP4" in html
 
 
+def test_frontend_auth_shell_can_be_hidden_after_login() -> None:
+    html = Path("index.html").read_text(encoding="utf-8")
+    css = Path("style.css").read_text(encoding="utf-8")
+    script = Path("script.js").read_text(encoding="utf-8")
+
+    assert '<body class="light-mode">' in html
+    assert ".auth-shell[hidden]" in css
+    assert "authShell.hidden = true" in script
+    assert "appShell.hidden = false" in script
+
+
 def test_frontend_script_contains_video_generation_flow() -> None:
     script = Path("script.js").read_text(encoding="utf-8")
 

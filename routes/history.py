@@ -3,10 +3,17 @@
 import os
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
 
+from auth_dependencies import get_optional_current_user
+from database import get_db
+from db_models import Scene as SceneRecord
+from db_models import Story, User
 from models.story import AudioResponse, HistoryDetail, HistoryItem, HistoryStats, ImageResponse
 from services.history_service import HistoryService
+from services.saas_service import dashboard_stats, history_detail_from_story
 from utils.logger import get_logger
 
 router = APIRouter(tags=["History"])
@@ -21,8 +28,25 @@ history_service = HistoryService()
     status_code=status.HTTP_200_OK,
     summary="List saved story generations",
 )
-async def list_history() -> list[HistoryItem]:
+async def list_history(
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+) -> list[HistoryItem]:
     """Return valid saved story output files, newest first."""
+    if current_user is not None:
+        stories = db.scalars(
+            select(Story)
+            .where(Story.user_id == current_user.id)
+            .order_by(Story.created_at.desc())
+        ).all()
+        return [
+            HistoryItem(
+                file=story.file_name or f"story_{story.story_id}.json",
+                created_at=story.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            )
+            for story in stories
+        ]
+
     try:
         return history_service.list_history()
     except Exception as exc:
@@ -39,8 +63,19 @@ async def list_history() -> list[HistoryItem]:
     status_code=status.HTTP_200_OK,
     summary="Calculate generation history statistics",
 )
-async def get_history_stats() -> HistoryStats:
+async def get_history_stats(
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+) -> HistoryStats:
     """Return aggregate counts from valid saved story output files."""
+    if current_user is not None:
+        stats = dashboard_stats(db, current_user.id)
+        return HistoryStats(
+            total_stories=stats.total_stories,
+            total_scenes=stats.total_scenes,
+            total_images=stats.total_images,
+        )
+
     try:
         return history_service.get_stats()
     except Exception as exc:
@@ -57,8 +92,35 @@ async def get_history_stats() -> HistoryStats:
     status_code=status.HTTP_200_OK,
     summary="Get a saved story generation",
 )
-async def get_history_detail(request: Request, filename: str) -> HistoryDetail:
+async def get_history_detail(
+    request: Request,
+    filename: str,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+) -> HistoryDetail:
     """Return one saved story output without regenerating content."""
+    if current_user is not None:
+        story = db.scalar(
+            select(Story)
+            .where(Story.user_id == current_user.id, Story.file_name == filename)
+            .options(
+                selectinload(Story.scenes).selectinload(SceneRecord.prompt),
+                selectinload(Story.scenes).selectinload(SceneRecord.images),
+                selectinload(Story.scenes).selectinload(SceneRecord.audio),
+                selectinload(Story.videos),
+            )
+        )
+        if story is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="History file not found.",
+            )
+
+        return _attach_history_image_urls(
+            history_detail_from_story(story),
+            request_base_url=str(request.base_url),
+        )
+
     try:
         detail = history_service.get_history_detail(filename)
     except Exception as exc:

@@ -6,6 +6,19 @@ const GENERATE_ENDPOINT = "/generate-story";
 const GENERATE_VIDEO_ENDPOINT = "/generate-video";
 const HISTORY_ENDPOINT = "/history";
 const HISTORY_STATS_ENDPOINT = "/history/stats";
+const API_DASHBOARD_ENDPOINT = "/api/dashboard";
+const API_HISTORY_ENDPOINT = "/api/history";
+const API_STORIES_ENDPOINT = "/api/stories";
+const API_IMAGES_ENDPOINT = "/api/images";
+const API_VIDEOS_ENDPOINT = "/api/videos";
+const API_PROFILE_ENDPOINT = "/api/profile";
+const API_SETTINGS_ENDPOINT = "/api/settings";
+const AUTH_LOGIN_ENDPOINT = "/auth/login";
+const AUTH_REGISTER_ENDPOINT = "/auth/register";
+const AUTH_REFRESH_ENDPOINT = "/auth/refresh";
+const AUTH_LOGOUT_ENDPOINT = "/auth/logout";
+const AUTH_ME_ENDPOINT = "/auth/me";
+const AUTH_FORGOT_PASSWORD_ENDPOINT = "/auth/forgot-password";
 const MIN_STORY_LENGTH = 3;
 const DEFAULT_VIDEO_DURATION_SECONDS = 30;
 const MIN_VIDEO_DURATION_SECONDS = 10;
@@ -14,6 +27,55 @@ const IMAGE_PROGRESS_STEP_MS = 2600;
 const IMAGE_LOADING_MESSAGE = "Generating images...";
 const IMAGE_FAILURE_MESSAGE = "Image generation failed. Story generation completed.";
 const IMAGE_DEFERRED_MESSAGE = "Story and prompts generated. Generate images one scene at a time.";
+const ACCESS_TOKEN_KEY = "cinegen_access_token";
+const REFRESH_TOKEN_KEY = "cinegen_refresh_token";
+const REMEMBER_SESSION_KEY = "cinegen_remember_session";
+const DEFAULT_THEME = "light";
+
+const authShell = document.querySelector("#authShell");
+const appShell = document.querySelector("#appShell");
+const loginPage = document.querySelector("#loginPage");
+const registerPage = document.querySelector("#registerPage");
+const forgotPasswordPage = document.querySelector("#forgotPasswordPage");
+const loginForm = document.querySelector("#loginForm");
+const registerForm = document.querySelector("#registerForm");
+const forgotPasswordForm = document.querySelector("#forgotPasswordForm");
+const rememberMeToggle = document.querySelector("#rememberMeToggle");
+const logoutButton = document.querySelector("#logoutButton");
+const sidebarUsername = document.querySelector("#sidebarUsername");
+const sidebarEmail = document.querySelector("#sidebarEmail");
+const sidebarAvatar = document.querySelector("#sidebarAvatar");
+const welcomeTitle = document.querySelector("#welcomeTitle");
+const totalVideos = document.querySelector("#totalVideos");
+const recentStories = document.querySelector("#recentStories");
+const latestActivity = document.querySelector("#latestActivity");
+const statsChart = document.querySelector("#statsChart");
+const historySearchInput = document.querySelector("#historySearchInput");
+const historySortSelect = document.querySelector("#historySortSelect");
+const historyPagination = document.querySelector("#historyPagination");
+const imageLibraryGrid = document.querySelector("#imageLibraryGrid");
+const imageProviderFilter = document.querySelector("#imageProviderFilter");
+const videoLibraryGrid = document.querySelector("#videoLibraryGrid");
+const profileForm = document.querySelector("#profileForm");
+const passwordForm = document.querySelector("#passwordForm");
+const settingsForm = document.querySelector("#settingsForm");
+const profileAvatar = document.querySelector("#profileAvatar");
+const profileName = document.querySelector("#profileName");
+const profileEmail = document.querySelector("#profileEmail");
+const profileJoined = document.querySelector("#profileJoined");
+const profileStories = document.querySelector("#profileStories");
+const profileImages = document.querySelector("#profileImages");
+const profileVideos = document.querySelector("#profileVideos");
+const profileUsername = document.querySelector("#profileUsername");
+const profileEmailInput = document.querySelector("#profileEmailInput");
+const profilePictureInput = document.querySelector("#profilePictureInput");
+const currentPasswordInput = document.querySelector("#currentPasswordInput");
+const newPasswordInput = document.querySelector("#newPasswordInput");
+const themeSelect = document.querySelector("#themeSelect");
+const languageSelect = document.querySelector("#languageSelect");
+const voiceSelect = document.querySelector("#voiceSelect");
+const imageProviderSelect = document.querySelector("#imageProviderSelect");
+const backgroundMusicToggle = document.querySelector("#backgroundMusicToggle");
 
 const storyForm = document.querySelector("#storyForm");
 const storyInput = document.querySelector("#storyInput");
@@ -61,6 +123,9 @@ let isVideoGenerating = false;
 let activeApiBaseUrl = DEFAULT_API_BASE_URL;
 let apiBaseUrlResolved = false;
 let apiBaseUrlResolution = null;
+let currentUser = null;
+let currentRoute = "dashboard";
+let currentHistoryPage = 1;
 
 storyInput.addEventListener("input", () => {
   validateStory({ showErrors: false });
@@ -69,106 +134,18 @@ storyInput.addEventListener("input", () => {
 storyForm.addEventListener("submit", handleStoryGeneration);
 generateButton.addEventListener("click", handleStoryGeneration);
 
-async function handleStoryGeneration(event) {
-  event?.preventDefault();
-  event?.stopPropagation();
-
-  if (isStoryGenerating) {
-    return;
-  }
-
-  if (!validateStory({ showErrors: true })) {
-    return;
-  }
-
-  isStoryGenerating = true;
-  latestResult = null;
-  setResultActionsEnabled(false);
-  setLoading(true);
-  setResultsProcessing(true);
-  setResultsVisible(false);
-  resetProgress();
-  const estimatedSceneCount = estimateSceneCount(storyInput.value);
-  const targetDurationSeconds = getTargetDurationSeconds();
-  showGenerationOverlay("Generating scenes...");
-  showStatus({
-    title: "Processing",
-    badge: "running",
-    message: "Generating scenes...",
-  });
-  startProgress({
-    imagesRequested: !textOnlyToggle.checked,
-    imageCount: estimatedSceneCount,
-    videoRequested: !textOnlyToggle.checked,
-  });
-
-  try {
-    const { response, data } = await fetchJson(GENERATE_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        story: storyInput.value.trim(),
-        text_only: textOnlyToggle.checked,
-        defer_images: false,
-        target_duration_seconds: targetDurationSeconds,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(buildApiErrorMessage(data, response.status));
-    }
-
-    latestResult = normalizeResult(data, {
-      source: "generated",
-      fileName: data.file_name || "cinegen-output.json",
-    });
-
-    if (!isResultCompleteForDisplay(latestResult)) {
-      throw new Error("Backend response did not include completed image results.");
-    }
-
-    updateProcessingMessage("Loading generated images...");
-    await preloadResultImages(latestResult);
-    if (shouldGenerateVideo(latestResult)) {
-      latestResult = {
-        ...latestResult,
-        video_status: "rendering",
-      };
-      renderResult(latestResult);
-      setResultsVisible(true);
-      await generateVideoForLatestResult();
-    }
-    completeProgress();
-    renderResult(latestResult);
-    setResultsVisible(true);
-    await Promise.all([
-      refreshHistory({ silent: true }),
-      refreshStats({ silent: true }),
-    ]);
-    showToast(getGenerationToastMessage(latestResult), getGenerationToastType(latestResult));
-  } catch (error) {
-    failProgress();
-    setResultsProcessing(false);
-    setResultsVisible(true);
-    const message = getRequestErrorMessage(error);
-    showPendingResultState();
-    renderEmpty(imagesGallery, "No images generated.");
-    showStatus({
-      title: "Request failed",
-      badge: "error",
-      message,
-    });
-    showToast(message, "error");
-  } finally {
-    isStoryGenerating = false;
-    setLoading(false);
-    setResultsProcessing(false);
-    stopProgressTimer();
-    hideGenerationOverlay();
-  }
-}
+loginForm.addEventListener("submit", handleLogin);
+registerForm.addEventListener("submit", handleRegister);
+forgotPasswordForm.addEventListener("submit", handleForgotPassword);
+logoutButton.addEventListener("click", handleLogout);
+profileForm.addEventListener("submit", handleProfileUpdate);
+passwordForm.addEventListener("submit", handlePasswordChange);
+settingsForm.addEventListener("submit", handleSettingsUpdate);
+imageProviderFilter.addEventListener("change", refreshImageLibrary);
+historySortSelect.addEventListener("change", () => refreshHistory({ silent: true, page: 1 }));
+historySearchInput.addEventListener("input", debounce(() => {
+  refreshHistory({ silent: true, page: 1 });
+}, 260));
 
 downloadJsonButton.addEventListener("click", () => {
   if (!latestResult) {
@@ -233,29 +210,336 @@ downloadVideoButton.addEventListener("click", async (event) => {
 });
 
 refreshHistoryButton.addEventListener("click", () => {
-  refreshHistory({ silent: false });
+  refreshHistory({ silent: false, page: currentHistoryPage });
   refreshStats({ silent: true });
 });
 
-refreshHistory({ silent: true });
-refreshStats({ silent: true });
-validateStory({ showErrors: false });
+document.querySelectorAll("[data-auth-route]").forEach((button) => {
+  button.addEventListener("click", () => showAuthRoute(button.dataset.authRoute));
+});
 
-async function fetchJson(url, options = {}) {
+document.querySelectorAll("[data-route], [data-route-button]").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    const route = link.dataset.route || link.dataset.routeButton;
+    navigateTo(route);
+  });
+});
+
+window.addEventListener("popstate", () => {
+  if (currentUser) {
+    showAppRoute(routeFromPath(location.pathname), { push: false });
+  } else {
+    showAuthRoute(location.pathname, { push: false });
+  }
+});
+
+initializeApp();
+
+async function initializeApp() {
+  applyTheme(DEFAULT_THEME);
+  validateStory({ showErrors: false });
+  setResultsVisible(true);
+  resetProgress();
+
+  if (!getAccessToken() && !getRefreshToken()) {
+    showAuthRoute(isAuthPath(location.pathname) ? location.pathname : "/login", {
+      push: false,
+    });
+    return;
+  }
+
+  try {
+    await loadCurrentUser();
+    showAuthenticatedApp({ push: false });
+  } catch {
+    clearTokens();
+    showAuthRoute("/login", { push: false });
+  }
+}
+
+async function handleLogin(event) {
+  event.preventDefault();
+  const formData = new FormData(loginForm);
+  const rememberMe = Boolean(rememberMeToggle.checked);
+
+  try {
+    const { response, data } = await fetchJson(AUTH_LOGIN_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: String(formData.get("email") || "").trim(),
+        password: String(formData.get("password") || ""),
+        remember_me: rememberMe,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    saveTokens(data, rememberMe);
+    currentUser = data.user;
+    showAuthenticatedApp();
+    showToast("Logged in.", "success");
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function handleRegister(event) {
+  event.preventDefault();
+  const formData = new FormData(registerForm);
+
+  try {
+    const { response, data } = await fetchJson(AUTH_REGISTER_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: String(formData.get("username") || "").trim(),
+        email: String(formData.get("email") || "").trim(),
+        password: String(formData.get("password") || ""),
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    clearTokens();
+    registerForm.reset();
+    loginForm.reset();
+    const registeredEmail = String(formData.get("email") || "").trim();
+    if (registeredEmail) {
+      document.querySelector("#loginEmail").value = registeredEmail;
+    }
+    showAuthRoute("/login");
+    showToast("Account created. Please login.", "success");
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function handleForgotPassword(event) {
+  event.preventDefault();
+  const formData = new FormData(forgotPasswordForm);
+
+  try {
+    const { response, data } = await fetchJson(AUTH_FORGOT_PASSWORD_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: String(formData.get("email") || "").trim() }),
+    });
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    showToast(data.message || "Password reset request received.", "success");
+    showAuthRoute("/login");
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function handleLogout() {
+  try {
+    await fetchJson(AUTH_LOGOUT_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: getRefreshToken() }),
+    });
+  } catch {
+    // Local logout still succeeds if the network is unavailable.
+  }
+  clearTokens();
+  currentUser = null;
+  latestResult = null;
+  showAuthRoute("/login");
+  showToast("Logged out.", "success");
+}
+
+async function loadCurrentUser() {
+  try {
+    const { response, data } = await fetchJson(AUTH_ME_ENDPOINT);
+    if (!response.ok) {
+      throw new Error("Session expired.");
+    }
+    currentUser = data;
+    return;
+  } catch (error) {
+    if (!getRefreshToken()) {
+      throw error;
+    }
+  }
+
+  await refreshSession();
+  const { response, data } = await fetchJson(AUTH_ME_ENDPOINT);
+  if (!response.ok) {
+    throw new Error("Session expired.");
+  }
+  currentUser = data;
+}
+
+async function refreshSession() {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    throw new Error("Session expired.");
+  }
+
+  const { response, data } = await fetchJson(
+    AUTH_REFRESH_ENDPOINT,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    },
+    { retryAuth: false }
+  );
+  if (!response.ok) {
+    clearTokens();
+    throw new Error(buildApiErrorMessage(data, response.status));
+  }
+  saveTokens(data, isRememberedSession());
+  currentUser = data.user;
+}
+
+function showAuthenticatedApp({ push = true } = {}) {
+  authShell.hidden = true;
+  appShell.hidden = false;
+  updateUserChrome();
+  const route = isAuthPath(location.pathname) ? "dashboard" : routeFromPath(location.pathname);
+  showAppRoute(route, { push });
+}
+
+function showAuthRoute(path, { push = true } = {}) {
+  if (currentUser && getAccessToken()) {
+    showAuthenticatedApp({ push });
+    return;
+  }
+
+  applyTheme(DEFAULT_THEME);
+  appShell.hidden = true;
+  authShell.hidden = false;
+  const normalizedPath = isAuthPath(path) ? path : "/login";
+  loginPage.hidden = normalizedPath !== "/login";
+  registerPage.hidden = normalizedPath !== "/register";
+  forgotPasswordPage.hidden = normalizedPath !== "/forgot-password";
+
+  if (push && location.pathname !== normalizedPath) {
+    history.pushState({}, "", normalizedPath);
+  }
+}
+
+function showAppRoute(route, { push = true } = {}) {
+  currentRoute = route || "dashboard";
+  document.querySelectorAll(".app-page").forEach((page) => {
+    page.hidden = true;
+  });
+
+  const pageIdByRoute = {
+    dashboard: "dashboardPage",
+    generate: "generatePage",
+    history: "history",
+    images: "imageLibraryPage",
+    videos: "videoLibraryPage",
+    profile: "profilePage",
+    settings: "settingsPage",
+  };
+  const page = document.querySelector(`#${pageIdByRoute[currentRoute] || "dashboardPage"}`);
+  page.hidden = false;
+
+  document.querySelectorAll("[data-route]").forEach((link) => {
+    link.classList.toggle("active", link.dataset.route === currentRoute);
+  });
+
+  const pathByRoute = {
+    dashboard: "/dashboard",
+    generate: "/generate",
+    history: "/history-page",
+    images: "/images",
+    videos: "/videos",
+    profile: "/profile",
+    settings: "/settings",
+  };
+  const path = pathByRoute[currentRoute] || "/dashboard";
+  if (push && location.pathname !== path) {
+    history.pushState({}, "", path);
+  }
+
+  refreshCurrentRoute();
+}
+
+function navigateTo(route) {
+  if (!currentUser) {
+    showAuthRoute("/login");
+    return;
+  }
+  showAppRoute(route);
+}
+
+function routeFromPath(path) {
+  const routes = {
+    "/dashboard": "dashboard",
+    "/generate": "generate",
+    "/history-page": "history",
+    "/images": "images",
+    "/videos": "videos",
+    "/profile": "profile",
+    "/settings": "settings",
+  };
+  return routes[path] || "dashboard";
+}
+
+function isAuthPath(path) {
+  return ["/login", "/register", "/forgot-password"].includes(path);
+}
+
+function refreshCurrentRoute() {
+  if (currentRoute === "dashboard") {
+    refreshDashboard();
+  } else if (currentRoute === "history") {
+    refreshHistory({ silent: true, page: currentHistoryPage });
+  } else if (currentRoute === "images") {
+    refreshImageLibrary();
+  } else if (currentRoute === "videos") {
+    refreshVideoLibrary();
+  } else if (currentRoute === "profile") {
+    refreshProfile();
+  } else if (currentRoute === "settings") {
+    refreshSettings();
+  }
+}
+
+function updateUserChrome() {
+  const username = currentUser?.username || "Creator";
+  const email = currentUser?.email || "";
+  sidebarUsername.textContent = username;
+  sidebarEmail.textContent = email;
+  sidebarAvatar.textContent = username.charAt(0).toUpperCase() || "C";
+  welcomeTitle.textContent = `Welcome, ${username}`;
+}
+
+async function fetchJson(url, options = {}, authOptions = {}) {
   if (!isAbsoluteUrl(url)) {
     await ensureApiBaseUrl();
   }
 
+  const retryAuth = authOptions.retryAuth !== false;
   const candidateBaseUrls = getApiBaseUrlCandidates(url);
   let lastError = null;
 
   for (const baseUrl of candidateBaseUrls) {
     try {
-      const response = await fetch(buildApiUrl(url, baseUrl), options);
+      const requestOptions = buildFetchOptions(url, options);
+      const response = await fetch(buildApiUrl(url, baseUrl), requestOptions);
       if (baseUrl) {
         activeApiBaseUrl = baseUrl;
       }
       const data = await readJsonResponse(response);
+      if (
+        response.status === 401 &&
+        retryAuth &&
+        getRefreshToken() &&
+        !url.startsWith("/auth/")
+      ) {
+        await refreshSession();
+        return fetchJson(url, options, { retryAuth: false });
+      }
       return { response, data };
     } catch (error) {
       lastError = error;
@@ -266,6 +550,22 @@ async function fetchJson(url, options = {}) {
   }
 
   throw lastError || new TypeError("Unable to reach backend");
+}
+
+function buildFetchOptions(url, options) {
+  const headers = new Headers(options.headers || {});
+  const token = getAccessToken();
+  if (token && shouldAttachAuth(url)) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  return { ...options, headers };
+}
+
+function shouldAttachAuth(url) {
+  return !url.startsWith("/auth/login") &&
+    !url.startsWith("/auth/register") &&
+    !url.startsWith("/auth/forgot-password") &&
+    url !== "/";
 }
 
 async function ensureApiBaseUrl() {
@@ -359,16 +659,247 @@ async function readJsonResponse(response) {
   }
 }
 
-async function refreshHistory({ silent }) {
-  refreshHistoryButton.disabled = true;
+function saveTokens(data, remember) {
+  clearTokens();
+  const store = remember ? localStorage : sessionStorage;
+  store.setItem(ACCESS_TOKEN_KEY, data.access_token);
+  store.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+  localStorage.setItem(REMEMBER_SESSION_KEY, remember ? "true" : "false");
+}
+
+function clearTokens() {
+  [localStorage, sessionStorage].forEach((store) => {
+    store.removeItem(ACCESS_TOKEN_KEY);
+    store.removeItem(REFRESH_TOKEN_KEY);
+  });
+  localStorage.removeItem(REMEMBER_SESSION_KEY);
+}
+
+function getAccessToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY) || sessionStorage.getItem(ACCESS_TOKEN_KEY);
+}
+
+function getRefreshToken() {
+  return localStorage.getItem(REFRESH_TOKEN_KEY) || sessionStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+function isRememberedSession() {
+  return localStorage.getItem(REMEMBER_SESSION_KEY) === "true";
+}
+
+async function handleStoryGeneration(event) {
+  event?.preventDefault();
+  event?.stopPropagation();
+
+  if (isStoryGenerating) {
+    return;
+  }
+
+  if (!validateStory({ showErrors: true })) {
+    return;
+  }
+
+  isStoryGenerating = true;
+  latestResult = null;
+  setResultActionsEnabled(false);
+  setLoading(true);
+  setResultsProcessing(true);
+  setResultsVisible(false);
+  resetProgress();
+  const estimatedSceneCount = estimateSceneCount(storyInput.value);
+  const targetDurationSeconds = getTargetDurationSeconds();
+  showGenerationOverlay("Scene Extraction");
+  showStatus({
+    title: "Processing",
+    badge: "running",
+    message: "Scene Extraction",
+  });
+  startProgress({
+    imagesRequested: !textOnlyToggle.checked,
+    imageCount: estimatedSceneCount,
+    videoRequested: !textOnlyToggle.checked,
+  });
 
   try {
-    const { response, data } = await fetchJson(HISTORY_ENDPOINT);
-    if (!response.ok || !Array.isArray(data)) {
+    const { response, data } = await fetchJson(GENERATE_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        story: storyInput.value.trim(),
+        text_only: textOnlyToggle.checked,
+        defer_images: false,
+        target_duration_seconds: targetDurationSeconds,
+      }),
+    });
+
+    if (!response.ok) {
       throw new Error(buildApiErrorMessage(data, response.status));
     }
 
-    renderHistory(data);
+    latestResult = normalizeResult(data, {
+      source: "generated",
+      fileName: data.file_name || "cinegen-output.json",
+    });
+
+    if (!isResultCompleteForDisplay(latestResult)) {
+      throw new Error("Backend response did not include completed image results.");
+    }
+
+    updateProcessingMessage("Loading generated images...");
+    await preloadResultImages(latestResult);
+    if (shouldGenerateVideo(latestResult)) {
+      latestResult = {
+        ...latestResult,
+        video_status: "rendering",
+      };
+      renderResult(latestResult);
+      setResultsVisible(true);
+      await generateVideoForLatestResult();
+    }
+    completeProgress();
+    renderResult(latestResult);
+    setResultsVisible(true);
+    await Promise.all([
+      refreshHistory({ silent: true, page: 1 }),
+      refreshStats({ silent: true }),
+      refreshDashboard(),
+      refreshImageLibrary(),
+      refreshVideoLibrary(),
+    ]);
+    showToast(getGenerationToastMessage(latestResult), getGenerationToastType(latestResult));
+  } catch (error) {
+    failProgress();
+    setResultsProcessing(false);
+    setResultsVisible(true);
+    const message = getRequestErrorMessage(error);
+    showPendingResultState();
+    renderEmpty(imagesGallery, "No images generated.");
+    showStatus({
+      title: "Request failed",
+      badge: "error",
+      message,
+    });
+    showToast(message, "error");
+  } finally {
+    isStoryGenerating = false;
+    setLoading(false);
+    setResultsProcessing(false);
+    stopProgressTimer();
+    hideGenerationOverlay();
+  }
+}
+
+async function refreshDashboard() {
+  if (!currentUser) {
+    return;
+  }
+
+  try {
+    const { response, data } = await fetchJson(API_DASHBOARD_ENDPOINT);
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    currentUser = data.user;
+    updateUserChrome();
+    renderStats(data.stats);
+    renderRecentStories(data.recent_stories || []);
+    renderActivity(data.latest_activity || []);
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function refreshStats({ silent }) {
+  try {
+    const endpoint = currentUser ? API_DASHBOARD_ENDPOINT : HISTORY_STATS_ENDPOINT;
+    const { response, data } = await fetchJson(endpoint);
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    renderStats(data.stats || data);
+  } catch (error) {
+    renderStats({});
+    if (!silent) {
+      showToast(getRequestErrorMessage(error), "error");
+    }
+  }
+}
+
+function renderStats(stats) {
+  totalStories.textContent = stats.total_stories ?? 0;
+  totalScenes.textContent = stats.total_scenes ?? 0;
+  totalImages.textContent = stats.total_images ?? 0;
+  if (totalVideos) {
+    totalVideos.textContent = stats.total_videos ?? 0;
+  }
+  if (statsChart) {
+    const values = [
+      ["Stories", stats.total_stories || 0],
+      ["Images", stats.total_images || 0],
+      ["Videos", stats.total_videos || 0],
+    ];
+    const max = Math.max(1, ...values.map(([, value]) => value));
+    statsChart.replaceChildren(
+      ...values.map(([label, value]) => {
+        const row = createElement("div", "chart-row");
+        row.append(
+          createTextElement("span", "", label),
+          createElement("i", ""),
+          createTextElement("strong", "", String(value))
+        );
+        row.querySelector("i").style.inlineSize = `${Math.max(8, (value / max) * 100)}%`;
+        return row;
+      })
+    );
+  }
+}
+
+function renderRecentStories(items) {
+  renderHistoryCards(recentStories, items.slice(0, 6), { compact: true });
+}
+
+function renderActivity(items) {
+  clearNode(latestActivity);
+  if (!items.length) {
+    renderEmpty(latestActivity, "No activity yet.");
+    return;
+  }
+  latestActivity.classList.remove("empty-state");
+  items.forEach((item) => {
+    const row = createElement("button", "activity-row");
+    row.type = "button";
+    row.append(
+      createTextElement("strong", "", item.title),
+      createTextElement("span", "", `${item.images_count || 0} images`)
+    );
+    row.addEventListener("click", () => loadStoryDetail(item.story_id));
+    latestActivity.append(row);
+  });
+}
+
+async function refreshHistory({ silent, page = currentHistoryPage }) {
+  currentHistoryPage = page;
+  refreshHistoryButton.disabled = true;
+
+  try {
+    const search = encodeURIComponent(historySearchInput.value.trim());
+    const sort = encodeURIComponent(historySortSelect.value || "newest");
+    const endpoint = currentUser
+      ? `${API_HISTORY_ENDPOINT}?search=${search}&sort=${sort}&page=${page}&page_size=12`
+      : HISTORY_ENDPOINT;
+    const { response, data } = await fetchJson(endpoint);
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+
+    if (Array.isArray(data)) {
+      renderHistory(data);
+    } else {
+      renderHistoryCards(historyList, data.items || []);
+      renderPagination(data);
+    }
     if (!silent) {
       showToast("History refreshed.", "success");
     }
@@ -382,24 +913,105 @@ async function refreshHistory({ silent }) {
   }
 }
 
-async function refreshStats({ silent }) {
-  try {
-    const { response, data } = await fetchJson(HISTORY_STATS_ENDPOINT);
-    if (!response.ok) {
-      throw new Error(buildApiErrorMessage(data, response.status));
-    }
-
-    totalStories.textContent = data.total_stories ?? 0;
-    totalScenes.textContent = data.total_scenes ?? 0;
-    totalImages.textContent = data.total_images ?? 0;
-  } catch (error) {
-    totalStories.textContent = "0";
-    totalScenes.textContent = "0";
-    totalImages.textContent = "0";
-    if (!silent) {
-      showToast(getRequestErrorMessage(error), "error");
-    }
+function renderPagination(data) {
+  clearNode(historyPagination);
+  if (!data || data.pages <= 1) {
+    return;
   }
+  const previous = createElement("button", "secondary-button", "Previous");
+  previous.type = "button";
+  previous.disabled = data.page <= 1;
+  previous.addEventListener("click", () =>
+    refreshHistory({ silent: true, page: data.page - 1 })
+  );
+  const label = createTextElement("span", "", `Page ${data.page} of ${data.pages}`);
+  const next = createElement("button", "secondary-button", "Next");
+  next.type = "button";
+  next.disabled = data.page >= data.pages;
+  next.addEventListener("click", () =>
+    refreshHistory({ silent: true, page: data.page + 1 })
+  );
+  historyPagination.append(previous, label, next);
+}
+
+function renderHistory(items) {
+  clearNode(historyList);
+
+  if (items.length === 0) {
+    renderEmpty(historyList, "History will appear after your first generation.");
+    return;
+  }
+
+  historyList.classList.remove("empty-state");
+  const fragment = document.createDocumentFragment();
+
+  items.forEach((item) => {
+    const card = createElement("article", "history-card");
+    const copy = createElement("div", "history-copy");
+    copy.append(
+      createTextElement("h3", "", formatHistoryTitle(item.file)),
+      createTextElement("p", "", item.created_at)
+    );
+
+    const button = createElement("button", "secondary-button", "View Details");
+    button.type = "button";
+    button.addEventListener("click", () => loadHistoryDetail(item.file, item.created_at));
+
+    card.append(copy, button);
+    fragment.append(card);
+  });
+
+  historyList.append(fragment);
+}
+
+function renderHistoryCards(container, items, { compact = false } = {}) {
+  clearNode(container);
+  if (!items.length) {
+    renderEmpty(container, compact ? "No recent stories yet." : "History will appear after your first generation.");
+    return;
+  }
+
+  container.classList.remove("empty-state");
+  items.forEach((item) => {
+    const card = createElement("article", "history-card rich-history-card");
+    if (item.thumbnail_url) {
+      const thumb = createElement("div", "history-thumb");
+      const image = document.createElement("img");
+      image.alt = item.title;
+      image.src = item.thumbnail_url;
+      thumb.append(image);
+      card.append(thumb);
+    }
+    const copy = createElement("div", "history-copy");
+    copy.append(
+      createTextElement("h3", "", item.title || formatHistoryTitle(item.file_name || "")),
+      createTextElement("p", "", `Created ${formatDate(item.created_at)}`),
+      createTextElement("p", "", `Generation Time: ${formatDate(item.generation_time)}`),
+      createTextElement("p", "", `${item.images_count || 0} images`),
+      createTextElement("p", "", item.video_duration ? `Video Duration: ${formatDuration(item.video_duration)}` : "Video Duration: none")
+    );
+    const actions = createElement("div", "history-actions");
+    const open = createElement("button", "secondary-button", "Open");
+    open.type = "button";
+    open.addEventListener("click", () => loadStoryDetail(item.story_id));
+    const download = createElement("button", "secondary-button", "Download");
+    download.type = "button";
+    download.addEventListener("click", async () => {
+      if (item.video_url) {
+        await downloadVideo({ video_url: item.video_url });
+        showToast("Video downloaded.", "success");
+      } else {
+        const detail = await fetchStoryDetail(item.story_id);
+        downloadText(buildStoryResultsText(detail), getTextDownloadName(detail.file_name));
+      }
+    });
+    const remove = createElement("button", "secondary-button danger-button", "Delete");
+    remove.type = "button";
+    remove.addEventListener("click", () => deleteStory(item.story_id));
+    actions.append(open, download, remove);
+    card.append(copy, actions);
+    container.append(card);
+  });
 }
 
 async function loadHistoryDetail(fileName, createdAt) {
@@ -425,6 +1037,7 @@ async function loadHistoryDetail(fileName, createdAt) {
     });
     await preloadResultImages(latestResult);
     renderResult(latestResult);
+    navigateTo("generate");
     setResultsVisible(true);
     showToast("History loaded.", "success");
     document.querySelector(".results-panel").scrollIntoView({ behavior: "smooth" });
@@ -437,6 +1050,315 @@ async function loadHistoryDetail(fileName, createdAt) {
     });
     showToast(getRequestErrorMessage(error), "error");
   }
+}
+
+async function fetchStoryDetail(storyId) {
+  const { response, data } = await fetchJson(`${API_STORIES_ENDPOINT}/${storyId}`);
+  if (!response.ok) {
+    throw new Error(buildApiErrorMessage(data, response.status));
+  }
+  return normalizeResult(data, {
+    source: "history",
+    fileName: data.file_name || `story_${storyId}.json`,
+    createdAt: data.created_at || "",
+  });
+}
+
+async function loadStoryDetail(storyId) {
+  try {
+    latestResult = await fetchStoryDetail(storyId);
+    await preloadResultImages(latestResult);
+    renderResult(latestResult);
+    navigateTo("generate");
+    setResultsVisible(true);
+    showToast("Story loaded.", "success");
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function deleteStory(storyId) {
+  try {
+    const { response, data } = await fetchJson(`${API_STORIES_ENDPOINT}/${storyId}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    showToast("Story deleted.", "success");
+    await Promise.all([refreshHistory({ silent: true }), refreshDashboard()]);
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function refreshImageLibrary() {
+  if (!currentUser) {
+    return;
+  }
+  try {
+    const provider = encodeURIComponent(imageProviderFilter.value || "");
+    const endpoint = provider ? `${API_IMAGES_ENDPOINT}?provider=${provider}` : API_IMAGES_ENDPOINT;
+    const { response, data } = await fetchJson(endpoint);
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    renderImageLibrary(data.items || []);
+  } catch (error) {
+    renderEmpty(imageLibraryGrid, "Unable to load images.");
+  }
+}
+
+function renderImageLibrary(items) {
+  clearNode(imageLibraryGrid);
+  if (!items.length) {
+    renderEmpty(imageLibraryGrid, "No images generated yet.");
+    return;
+  }
+  imageLibraryGrid.classList.remove("empty-state");
+  items.forEach((item) => {
+    const card = createElement("article", "image-card");
+    const frame = createElement("div", "image-frame");
+    if (item.image_url || item.image_path) {
+      const image = document.createElement("img");
+      image.alt = item.title;
+      image.src = item.image_url || item.image_path;
+      frame.append(image);
+    } else {
+      frame.append(createPlaceholder("Image unavailable"));
+    }
+    const copy = createElement("div", "image-copy");
+    copy.append(
+      createKicker(`Scene ${item.scene_number}`),
+      createTextElement("p", "image-title", item.title),
+      createTextElement("p", "image-prompt", item.prompt || "Prompt unavailable."),
+      createStatus(item.status)
+    );
+    const actions = createElement("div", "image-actions");
+    const download = createElement("button", "secondary-button", "Download");
+    download.type = "button";
+    download.addEventListener("click", () =>
+      downloadImage({ image_url: item.image_url || item.image_path })
+    );
+    const remove = createElement("button", "secondary-button danger-button", "Delete");
+    remove.type = "button";
+    remove.addEventListener("click", () => deleteImage(item.image_id));
+    actions.append(download, remove);
+    card.append(frame, copy, actions);
+    imageLibraryGrid.append(card);
+  });
+}
+
+async function deleteImage(imageId) {
+  try {
+    const { response, data } = await fetchJson(`${API_IMAGES_ENDPOINT}/${imageId}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    showToast("Image deleted.", "success");
+    await refreshImageLibrary();
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function refreshVideoLibrary() {
+  if (!currentUser) {
+    return;
+  }
+  try {
+    const { response, data } = await fetchJson(API_VIDEOS_ENDPOINT);
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    renderVideoLibrary(data.items || []);
+  } catch {
+    renderEmpty(videoLibraryGrid, "Unable to load videos.");
+  }
+}
+
+function renderVideoLibrary(items) {
+  clearNode(videoLibraryGrid);
+  if (!items.length) {
+    renderEmpty(videoLibraryGrid, "No videos generated yet.");
+    return;
+  }
+  videoLibraryGrid.classList.remove("empty-state");
+  items.forEach((item) => {
+    const card = createElement("article", "video-library-card");
+    if (item.thumbnail_url) {
+      const image = document.createElement("img");
+      image.alt = item.title;
+      image.src = item.thumbnail_url;
+      card.append(image);
+    }
+    const copy = createElement("div", "video-library-copy");
+    copy.append(
+      createTextElement("h3", "", item.title),
+      createTextElement("p", "", item.duration ? formatDuration(item.duration) : "Duration pending")
+    );
+    const actions = createElement("div", "video-actions");
+    const play = createElement("a", "secondary-button button-link", "Play");
+    play.href = item.video_url || item.video_path || "#";
+    play.target = "_blank";
+    play.rel = "noopener";
+    const download = createElement("button", "secondary-button", "Download");
+    download.type = "button";
+    download.addEventListener("click", () =>
+      downloadVideo({ video_url: item.video_url || item.video_path })
+    );
+    const share = createElement("button", "secondary-button", "Share");
+    share.type = "button";
+    share.addEventListener("click", () => shareUrl(item.video_url || item.video_path));
+    const remove = createElement("button", "secondary-button danger-button", "Delete");
+    remove.type = "button";
+    remove.addEventListener("click", () => deleteVideo(item.video_id));
+    actions.append(play, download, share, remove);
+    card.append(copy, actions);
+    videoLibraryGrid.append(card);
+  });
+}
+
+async function deleteVideo(videoId) {
+  try {
+    const { response, data } = await fetchJson(`${API_VIDEOS_ENDPOINT}/${videoId}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    showToast("Video deleted.", "success");
+    await refreshVideoLibrary();
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function refreshProfile() {
+  if (!currentUser) {
+    return;
+  }
+  try {
+    const { response, data } = await fetchJson(API_PROFILE_ENDPOINT);
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    renderProfile(data);
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+function renderProfile(data) {
+  const user = data.user || currentUser;
+  currentUser = user;
+  updateUserChrome();
+  const initial = user.username.charAt(0).toUpperCase() || "C";
+  profileAvatar.textContent = initial;
+  profileName.textContent = user.username;
+  profileEmail.textContent = user.email;
+  profileJoined.textContent = `Joined ${formatDate(user.created_at)}`;
+  profileStories.textContent = data.stats?.total_stories || 0;
+  profileImages.textContent = data.stats?.total_images || 0;
+  profileVideos.textContent = data.stats?.total_videos || 0;
+  profileUsername.value = user.username;
+  profileEmailInput.value = user.email;
+  profilePictureInput.value = user.profile_picture || "";
+}
+
+async function handleProfileUpdate(event) {
+  event.preventDefault();
+  try {
+    const { response, data } = await fetchJson(API_PROFILE_ENDPOINT, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: profileUsername.value.trim(),
+        email: profileEmailInput.value.trim(),
+        profile_picture: profilePictureInput.value.trim() || null,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    renderProfile(data);
+    showToast("Profile updated.", "success");
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function handlePasswordChange(event) {
+  event.preventDefault();
+  try {
+    const { response, data } = await fetchJson(`${API_PROFILE_ENDPOINT}/change-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        current_password: currentPasswordInput.value,
+        new_password: newPasswordInput.value,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    passwordForm.reset();
+    showToast("Password changed.", "success");
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function refreshSettings() {
+  try {
+    const { response, data } = await fetchJson(API_SETTINGS_ENDPOINT);
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    const theme = normalizeTheme(data.theme);
+    themeSelect.value = theme;
+    languageSelect.value = data.language || "en";
+    voiceSelect.value = data.voice_selection || "en-US-GuyNeural";
+    imageProviderSelect.value = data.image_provider || "pollinations";
+    backgroundMusicToggle.checked = Boolean(data.background_music_enabled);
+    applyTheme(theme);
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+async function handleSettingsUpdate(event) {
+  event.preventDefault();
+  try {
+    const { response, data } = await fetchJson(API_SETTINGS_ENDPOINT, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        theme: themeSelect.value,
+        language: languageSelect.value,
+        voice_selection: voiceSelect.value,
+        image_provider: imageProviderSelect.value,
+        background_music_enabled: backgroundMusicToggle.checked,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+    applyTheme(data.theme);
+    showToast("Settings saved.", "success");
+  } catch (error) {
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+function normalizeTheme(theme) {
+  return theme === "dark" ? "dark" : DEFAULT_THEME;
+}
+
+function applyTheme(theme) {
+  document.body.classList.toggle("light-mode", normalizeTheme(theme) === "light");
 }
 
 function normalizeResult(data, { source, fileName, createdAt = "" }) {
@@ -533,18 +1455,15 @@ function preloadImage(imageUrl) {
   return new Promise((resolve) => {
     const image = new Image();
     const timeout = window.setTimeout(() => {
-      console.error("Image preload timed out", imageUrl);
       resolve();
     }, 15000);
 
     image.onload = () => {
       window.clearTimeout(timeout);
-      console.log("Preloaded", imageUrl);
       resolve();
     };
-    image.onerror = (event) => {
+    image.onerror = () => {
       window.clearTimeout(timeout);
-      console.error("Image preload failed", imageUrl, event);
       resolve();
     };
     image.src = imageUrl;
@@ -562,7 +1481,7 @@ async function generateVideoForLatestResult() {
 
   isVideoGenerating = true;
   setProgressStep("narration");
-  updateProcessingMessage("Generating narration...");
+  updateProcessingMessage("Narration");
 
   try {
     const { response, data } = await fetchJson(GENERATE_VIDEO_ENDPOINT, {
@@ -649,6 +1568,8 @@ async function generateVideoFromResult(data) {
     await Promise.all([
       refreshHistory({ silent: true }),
       refreshStats({ silent: true }),
+      refreshDashboard(),
+      refreshVideoLibrary(),
     ]);
     showToast("Video generated successfully.", "success");
   }
@@ -701,7 +1622,6 @@ function renderResult(data) {
   const scenes = data.scenes;
   const prompts = data.prompts;
   const images = data.images;
-  const summary = data.image_summary;
 
   resultTitle.textContent =
     data.source === "history"
@@ -846,9 +1766,7 @@ function renderImages(data) {
         ? `${getImageAltPrefix(image)} for ${scene.description}`
         : `${getImageAltPrefix(image)} for scene ${image.scene}`;
       img.loading = "lazy";
-      img.onload = () => console.log("Loaded", img.src);
-      img.onerror = (event) => {
-        console.error("Image failed", img.src, event);
+      img.onerror = () => {
         frame.replaceChildren(createPlaceholder("Image unavailable"));
       };
       img.src = image.image_url;
@@ -1045,36 +1963,6 @@ function createGenerateVideoButton(data, label) {
   return button;
 }
 
-function renderHistory(items) {
-  clearNode(historyList);
-
-  if (items.length === 0) {
-    renderEmpty(historyList, "History will appear after your first generation.");
-    return;
-  }
-
-  historyList.classList.remove("empty-state");
-  const fragment = document.createDocumentFragment();
-
-  items.forEach((item) => {
-    const card = createElement("article", "history-card");
-    const copy = createElement("div", "history-copy");
-    copy.append(
-      createTextElement("h3", "", formatHistoryTitle(item.file)),
-      createTextElement("p", "", item.created_at)
-    );
-
-    const button = createElement("button", "secondary-button", "View Details");
-    button.type = "button";
-    button.addEventListener("click", () => loadHistoryDetail(item.file, item.created_at));
-
-    card.append(copy, button);
-    fragment.append(card);
-  });
-
-  historyList.append(fragment);
-}
-
 function validateStory({ showErrors }) {
   const story = storyInput.value.trim();
   let message = "";
@@ -1141,24 +2029,24 @@ function startProgress({ imagesRequested, imageCount, videoRequested = false }) 
 function buildProgressSteps({ imagesRequested, imageCount, videoRequested = false }) {
   const totalImages = Math.max(1, Number(imageCount) || 1);
   const baseSteps = [
-    { key: "scenes", label: "Generating scenes..." },
-    { key: "prompts", label: "Creating prompts..." },
+    { key: "scenes", label: "Scene Extraction" },
+    { key: "prompts", label: "Prompt Generation" },
   ];
 
   if (imagesRequested) {
     baseSteps.push(
       ...Array.from({ length: totalImages }, (_, index) => ({
         key: `image-${index + 1}`,
-        label: `Generating scene ${index + 1} image...`,
+        label: `Image Generation ${index + 1}`,
       }))
     );
   }
 
   if (videoRequested) {
     baseSteps.push(
-      { key: "narration", label: "Generating narration..." },
+      { key: "narration", label: "Narration" },
       { key: "audio", label: "Generating audio..." },
-      { key: "video", label: "Creating cinematic video..." },
+      { key: "video", label: "Video Generation" },
       { key: "encoding", label: "Encoding MP4..." }
     );
   }
@@ -1801,7 +2689,7 @@ function buildStoryResultsText(data) {
 }
 
 function formatHistoryTitle(fileName) {
-  const baseName = fileName.replace(/\.json$/i, "");
+  const baseName = String(fileName || "story").replace(/\.json$/i, "");
   return baseName.replace(/^story/i, "Story");
 }
 
@@ -1828,4 +2716,36 @@ function estimateSceneCount(story) {
     .filter(Boolean);
 
   return Math.max(1, matches.length);
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "Unknown";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+  return date.toLocaleString();
+}
+
+async function shareUrl(url) {
+  if (!url) {
+    showToast("No video URL available.", "error");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast("Video link copied.", "success");
+  } catch {
+    showToast(url, "success");
+  }
+}
+
+function debounce(callback, delay) {
+  let timeoutId = null;
+  return (...args) => {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => callback(...args), delay);
+  };
 }

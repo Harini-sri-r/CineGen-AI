@@ -8,10 +8,14 @@ from pathlib import Path
 from time import perf_counter
 import traceback
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.concurrency import run_in_threadpool
 from pydantic import ValidationError
+from sqlalchemy.orm import Session
 
+from auth_dependencies import get_optional_current_user
+from database import get_db
+from db_models import User
 from models.story import (
     AudioResponse,
     ImageResponse,
@@ -25,6 +29,7 @@ from services.image_generator import ImageGenerator
 from services.llm_scene_generator import LLMSceneGenerator
 from services.prompt_generator import PromptGenerator
 from services.scene_generator import SceneGenerator
+from services.saas_service import persist_story_generation, user_media_dirs
 from services.story_composer import StoryComposer
 from services.tts_generator import TTSGenerator
 from services.video_generator import VideoGenerationError, VideoGenerator
@@ -53,6 +58,8 @@ file_handler = FileHandler()
 async def generate_video(
     api_request: Request,
     request: VideoGenerationRequest,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> VideoGenerationResponse:
     """Create a complete story-to-video generation."""
     user_story = request.story.strip()
@@ -63,11 +70,17 @@ async def generate_video(
     expanded_from_idea = story != " ".join(user_story.split()).strip()
     started_at = perf_counter()
     saved_payload = _read_reusable_payload(request.file_name, story)
+    output_file_name = request.file_name or _build_story_file_name()
+    story_key = Path(output_file_name).stem
+    active_image_generator, active_tts_generator, active_video_generator = (
+        _media_generators_for_user(current_user, story_key)
+    )
 
     try:
         scenes, prompts, images = await _prepare_story_media(
             story,
             saved_payload,
+            active_image_generator,
             expanded_from_idea=expanded_from_idea,
         )
         images = _attach_image_urls(images, str(api_request.base_url))
@@ -78,12 +91,11 @@ async def generate_video(
                 detail="Generate at least one successful scene image before creating a video.",
             )
 
-        audio = await _generate_audio_with_fallback(scenes)
+        audio = await _generate_audio_with_fallback(scenes, active_tts_generator)
 
-        output_file_name = request.file_name or _build_story_file_name()
         video_output_name = output_file_name.replace(".json", ".mp4")
         video_result = await run_in_threadpool(
-            video_generator.create_video,
+            active_video_generator.create_video,
             scenes,
             images,
             audio,
@@ -154,6 +166,28 @@ async def generate_video(
             detail="Video was created, but metadata could not be saved.",
         ) from exc
 
+    if current_user is not None:
+        try:
+            persist_story_generation(
+                db=db,
+                user=current_user,
+                file_name=file_name,
+                story=story,
+                scenes=scenes,
+                prompts=prompts,
+                images=images,
+                audio=audio,
+                video_path=video_path,
+                video_url=video_url,
+                thumbnail_url=thumbnail_url,
+                video_duration_seconds=video_result.duration_seconds,
+                target_duration_seconds=request.target_duration_seconds,
+                generation_duration_seconds=generation_duration_seconds,
+                status=response_status,
+            )
+        except Exception:
+            logger.exception("Unable to persist authenticated video metadata")
+
     return VideoGenerationResponse(
         success=True,
         status=response_status,
@@ -180,6 +214,7 @@ async def generate_video(
 async def _prepare_story_media(
     story: str,
     saved_payload: dict | None,
+    active_image_generator: ImageGenerator,
     expanded_from_idea: bool = False,
 ) -> tuple[list[Scene], list[Prompt], list[ImageResponse]]:
     """Extract or reuse scenes, prompts, and images for the video pipeline."""
@@ -218,14 +253,17 @@ async def _prepare_story_media(
         )
 
     prompts = await run_in_threadpool(prompt_generator.generate_prompts, scenes)
-    images = await run_in_threadpool(image_generator.generate_images, prompts)
+    images = await run_in_threadpool(active_image_generator.generate_images, prompts)
     return scenes, prompts, images
 
 
-async def _generate_audio_with_fallback(scenes: list[Scene]) -> list[AudioResponse]:
+async def _generate_audio_with_fallback(
+    scenes: list[Scene],
+    active_tts_generator: TTSGenerator,
+) -> list[AudioResponse]:
     """Generate narration while keeping the video pipeline alive on failure."""
     try:
-        return await run_in_threadpool(tts_generator.generate_narrations, scenes)
+        return await run_in_threadpool(active_tts_generator.generate_narrations, scenes)
     except Exception as exc:
         error_trace = traceback.format_exc()
         logger.exception("Narration batch failed")
@@ -406,3 +444,22 @@ def _format_duration(duration_seconds: float) -> str:
 def _build_story_file_name() -> str:
     """Build a story JSON name for standalone video generation."""
     return f"story_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+
+
+def _media_generators_for_user(
+    user: User | None,
+    story_key: str,
+) -> tuple[ImageGenerator, TTSGenerator, VideoGenerator]:
+    """Return global or user-scoped media generators."""
+    if user is None:
+        return image_generator, tts_generator, video_generator
+
+    media_dirs = user_media_dirs(user, story_key)
+    return (
+        ImageGenerator(
+            output_dir=media_dirs["images"],
+            generation_timeout_seconds=300,
+        ),
+        TTSGenerator(output_dir=media_dirs["audio"]),
+        VideoGenerator(output_dir=media_dirs["videos"]),
+    )
