@@ -1,0 +1,119 @@
+{
+  "success": true,
+  "status": "completed",
+  "message": "Story video generated successfully.",
+  "story": "An opening image introduces a princess in a world full of possibility. A sudden problem interrupts a princess and creates a clear mission. A princess follows a clue into a striking new place. A difficult choice tests a princess when the journey becomes dangerous.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "An opening image introduces a princess in a world full of possibility"
+    },
+    {
+      "scene": 2,
+      "description": "A sudden problem interrupts a princess and creates a clear mission"
+    },
+    {
+      "scene": 3,
+      "description": "A princess follows a clue into a striking new place"
+    },
+    {
+      "scene": 4,
+      "description": "A difficult choice tests a princess when the journey becomes dangerous"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "Scene must clearly show: An opening image introduces a princess in a world full of possibility, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 2,
+      "prompt": "Scene must clearly show: A sudden problem interrupts a princess and creates a clear mission, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 3,
+      "prompt": "Scene must clearly show: A princess follows a clue into a striking new place, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 4,
+      "prompt": "Scene must clearly show: A difficult choice tests a princess when the journey becomes dangerous, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "success",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_1.png?v=1782554640",
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_2.png?v=1782554643",
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "image_path": "outputs/images/scene_3.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_3.png?v=1782554646",
+      "error": null
+    },
+    {
+      "scene": 4,
+      "status": "success",
+      "image_path": "outputs/images/scene_4.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_4.png?v=1782554649",
+      "error": null
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 4,
+    "succeeded": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "audio": [
+    {
+      "scene": 1,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_1.mp3",
+      "audio_url": "http://127.0.0.1:8003/outputs/audio/scene_1.mp3",
+      "duration_seconds": 4.97,
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_2.mp3",
+      "audio_url": "http://127.0.0.1:8003/outputs/audio/scene_2.mp3",
+      "duration_seconds": 4.34,
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_3.mp3",
+      "audio_url": "http://127.0.0.1:8003/outputs/audio/scene_3.mp3",
+      "duration_seconds": 3.74,
+      "error": null
+    },
+    {
+      "scene": 4,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_4.mp3",
+      "audio_url": "http://127.0.0.1:8003/outputs/audio/scene_4.mp3",
+      "duration_seconds": 4.58,
+      "error": null
+    }
+  ],
+  "video_path": "outputs/videos/story_20260627_153409.mp4",
+  "video_url": "outputs/videos/story_20260627_153409.mp4",
+  "thumbnail_url": "http://127.0.0.1:8003/outputs/images/scene_1.png?v=1782554640",
+  "video_duration_seconds": 19.55,
+  "target_duration_seconds": 20,
+  "generation_duration_seconds": 128.97679879982024
+}

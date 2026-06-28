@@ -1,0 +1,145 @@
+{
+  "success": true,
+  "status": "partial",
+  "message": "Image generation failed. Story generation completed.",
+  "story": "An opening image introduces a boys friendship in a world full of possibility. A sudden problem interrupts a boys friendship and creates a clear mission. A boys friendship follows a clue into a striking new place. A difficult choice tests a boys friendship when the journey becomes dangerous. A boys friendship discovers the courage needed to change the outcome. The adventure reaches a cinematic final moment with a boys friendship transformed. A quiet closing image shows what a boys friendship has protected or learned.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "An opening image introduces a boys friendship in a world full of possibility"
+    },
+    {
+      "scene": 2,
+      "description": "A sudden problem interrupts a boys friendship and creates a clear mission"
+    },
+    {
+      "scene": 3,
+      "description": "A boys friendship follows a clue into a striking new place"
+    },
+    {
+      "scene": 4,
+      "description": "A difficult choice tests a boys friendship when the journey becomes dangerous"
+    },
+    {
+      "scene": 5,
+      "description": "A boys friendship discovers the courage needed to change the outcome"
+    },
+    {
+      "scene": 6,
+      "description": "The adventure reaches a cinematic final moment with a boys friendship transformed"
+    },
+    {
+      "scene": 7,
+      "description": "A quiet closing image shows what a boys friendship has protected or learned"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "Scene must clearly show: An opening image introduces a boys friendship in a world full of possibility, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 2,
+      "prompt": "Scene must clearly show: A sudden problem interrupts a boys friendship and creates a clear mission, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 3,
+      "prompt": "Scene must clearly show: A boys friendship follows a clue into a striking new place, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 4,
+      "prompt": "Scene must clearly show: A difficult choice tests a boys friendship when the journey becomes dangerous, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 5,
+      "prompt": "Scene must clearly show: A boys friendship discovers the courage needed to change the outcome, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 6,
+      "prompt": "Scene must clearly show: The adventure reaches a cinematic final moment with a boys friendship transformed, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 7,
+      "prompt": "Scene must clearly show: A quiet closing image shows what a boys friendship has protected or learned, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "failed",
+      "image_path": null,
+      "image_url": null,
+      "provider": null,
+      "warning": null,
+      "error": "Another image generation batch is already running. Try again later."
+    },
+    {
+      "scene": 2,
+      "status": "failed",
+      "image_path": null,
+      "image_url": null,
+      "provider": null,
+      "warning": null,
+      "error": "Another image generation batch is already running. Try again later."
+    },
+    {
+      "scene": 3,
+      "status": "failed",
+      "image_path": null,
+      "image_url": null,
+      "provider": null,
+      "warning": null,
+      "error": "Another image generation batch is already running. Try again later."
+    },
+    {
+      "scene": 4,
+      "status": "failed",
+      "image_path": null,
+      "image_url": null,
+      "provider": null,
+      "warning": null,
+      "error": "Another image generation batch is already running. Try again later."
+    },
+    {
+      "scene": 5,
+      "status": "failed",
+      "image_path": null,
+      "image_url": null,
+      "provider": null,
+      "warning": null,
+      "error": "Another image generation batch is already running. Try again later."
+    },
+    {
+      "scene": 6,
+      "status": "failed",
+      "image_path": null,
+      "image_url": null,
+      "provider": null,
+      "warning": null,
+      "error": "Another image generation batch is already running. Try again later."
+    },
+    {
+      "scene": 7,
+      "status": "failed",
+      "image_path": null,
+      "image_url": null,
+      "provider": null,
+      "warning": null,
+      "error": "Another image generation batch is already running. Try again later."
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 7,
+    "succeeded": 0,
+    "failed": 7,
+    "skipped": 0
+  },
+  "audio": [],
+  "video_path": null,
+  "video_url": null,
+  "thumbnail_url": null,
+  "video_duration_seconds": null,
+  "target_duration_seconds": 60,
+  "generation_duration_seconds": null
+}

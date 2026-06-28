@@ -1,0 +1,152 @@
+{
+  "success": true,
+  "status": "completed",
+  "message": "Story video generated successfully.",
+  "story": "An opening image introduces a anime in a world full of possibility. A sudden problem interrupts a anime and creates a clear mission. A anime follows a clue into a striking new place. A difficult choice tests a anime when the journey becomes dangerous. A anime discovers the courage needed to change the outcome.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "An opening image introduces a anime in a world full of possibility"
+    },
+    {
+      "scene": 2,
+      "description": "A sudden problem interrupts a anime and creates a clear mission"
+    },
+    {
+      "scene": 3,
+      "description": "A anime follows a clue into a striking new place"
+    },
+    {
+      "scene": 4,
+      "description": "A difficult choice tests a anime when the journey becomes dangerous"
+    },
+    {
+      "scene": 5,
+      "description": "A anime discovers the courage needed to change the outcome"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "Scene must clearly show: An opening image introduces a anime in a world full of possibility, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 2,
+      "prompt": "Scene must clearly show: A sudden problem interrupts a anime and creates a clear mission, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 3,
+      "prompt": "Scene must clearly show: A anime follows a clue into a striking new place, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 4,
+      "prompt": "Scene must clearly show: A difficult choice tests a anime when the journey becomes dangerous, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 5,
+      "prompt": "Scene must clearly show: A anime discovers the courage needed to change the outcome, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "success",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_1.png?v=1782563837",
+      "provider": "storyboard",
+      "warning": "Hosted image providers failed, so CineGen rendered a local storyboard fallback. Primary provider error: fal.ai account balance is exhausted. Top up fal.ai billing or use a different image provider. Last fallback error: Pollinations image backend is temporarily unavailable (HTTP 502). Try again later or use a different image provider.",
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_2.png?v=1782563841",
+      "provider": "storyboard",
+      "warning": "Hosted image providers failed, so CineGen rendered a local storyboard fallback. Primary provider error: fal.ai account balance is exhausted. Top up fal.ai billing or use a different image provider. Last fallback error: Pollinations image backend is temporarily unavailable (HTTP 502). Try again later or use a different image provider.",
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "image_path": "outputs/images/scene_3.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_3.png?v=1782563844",
+      "provider": "storyboard",
+      "warning": "Hosted image providers failed, so CineGen rendered a local storyboard fallback. Primary provider error: fal.ai account balance is exhausted. Top up fal.ai billing or use a different image provider. Last fallback error: Pollinations image backend is temporarily unavailable (HTTP 502). Try again later or use a different image provider.",
+      "error": null
+    },
+    {
+      "scene": 4,
+      "status": "success",
+      "image_path": "outputs/images/scene_4.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_4.png?v=1782563846",
+      "provider": "storyboard",
+      "warning": "Hosted image providers failed, so CineGen rendered a local storyboard fallback. Primary provider error: fal.ai account balance is exhausted. Top up fal.ai billing or use a different image provider. Last fallback error: Pollinations image backend is temporarily unavailable (HTTP 502). Try again later or use a different image provider.",
+      "error": null
+    },
+    {
+      "scene": 5,
+      "status": "success",
+      "image_path": "outputs/images/scene_5.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_5.png?v=1782563850",
+      "provider": "storyboard",
+      "warning": "Hosted image providers failed, so CineGen rendered a local storyboard fallback. Primary provider error: fal.ai account balance is exhausted. Top up fal.ai billing or use a different image provider. Last fallback error: Pollinations image backend is temporarily unavailable (HTTP 502). Try again later or use a different image provider.",
+      "error": null
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 5,
+    "succeeded": 5,
+    "failed": 0,
+    "skipped": 0
+  },
+  "audio": [
+    {
+      "scene": 1,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_1.mp3",
+      "audio_url": "http://127.0.0.1:8003/outputs/audio/scene_1.mp3",
+      "duration_seconds": 4.97,
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_2.mp3",
+      "audio_url": "http://127.0.0.1:8003/outputs/audio/scene_2.mp3",
+      "duration_seconds": 4.25,
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_3.mp3",
+      "audio_url": "http://127.0.0.1:8003/outputs/audio/scene_3.mp3",
+      "duration_seconds": 3.74,
+      "error": null
+    },
+    {
+      "scene": 4,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_4.mp3",
+      "audio_url": "http://127.0.0.1:8003/outputs/audio/scene_4.mp3",
+      "duration_seconds": 4.46,
+      "error": null
+    },
+    {
+      "scene": 5,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_5.mp3",
+      "audio_url": "http://127.0.0.1:8003/outputs/audio/scene_5.mp3",
+      "duration_seconds": 4.06,
+      "error": null
+    }
+  ],
+  "video_path": "outputs/videos/story_20260627_180730.mp4",
+  "video_url": "outputs/videos/story_20260627_180730.mp4",
+  "thumbnail_url": "http://127.0.0.1:8003/outputs/images/scene_1.png?v=1782563837",
+  "video_duration_seconds": 29.549999999999997,
+  "target_duration_seconds": 30,
+  "generation_duration_seconds": 229.73484819999976
+}

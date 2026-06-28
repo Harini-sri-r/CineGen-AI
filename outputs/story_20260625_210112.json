@@ -1,0 +1,95 @@
+{
+  "success": true,
+  "status": "completed",
+  "message": "Story video generated successfully.",
+  "story": "A lonely lighthouse keeper discovers a glowing bottle washed ashore during a storm. Inside is a tiny map leading to a hidden island that appears only under moonlight. She sails into the mist, finds the island, and awakens an ancient crystal that lights the entire sea.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "A lonely lighthouse keeper discovers a glowing bottle washed ashore during a storm"
+    },
+    {
+      "scene": 2,
+      "description": "Inside is a tiny map leading to a hidden island that appears only under moonlight"
+    },
+    {
+      "scene": 3,
+      "description": "She sails into the mist, finds the island, and awakens an ancient crystal"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "ethereal glow, volumetric lighting, a lonely lighthouse keeper discovers a glowing bottle washed ashore during a storm, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    },
+    {
+      "scene": 2,
+      "prompt": "inside is a tiny map leading to a hidden island that appears only under moonlight, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    },
+    {
+      "scene": 3,
+      "prompt": "she sails into the mist, finds the island, and awakens an ancient crystal, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "success",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_1.png",
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_2.png",
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "image_path": "outputs/images/scene_3.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_3.png",
+      "error": null
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 3,
+    "succeeded": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "audio": [
+    {
+      "scene": 1,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_1.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_1.mp3",
+      "duration_seconds": 5.09,
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_2.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_2.mp3",
+      "duration_seconds": 5.11,
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_3.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_3.mp3",
+      "duration_seconds": 5.02,
+      "error": null
+    }
+  ],
+  "video_path": "outputs/videos/story_20260625_210112.mp4",
+  "video_url": "outputs/videos/story_20260625_210112.mp4",
+  "thumbnail_url": "http://127.0.0.1:8001/outputs/images/scene_1.png",
+  "video_duration_seconds": 17.97,
+  "generation_duration_seconds": 109.07081070006825
+}

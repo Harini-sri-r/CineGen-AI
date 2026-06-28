@@ -1,6 +1,7 @@
 """Story generation API routes."""
 
 import os
+from pathlib import Path
 import traceback
 from typing import Literal
 
@@ -19,6 +20,8 @@ from models.story import (
 from services.image_generator import ImageGenerator
 from services.llm_scene_generator import LLMSceneGenerator
 from services.prompt_generator import PromptGenerator
+from services.scene_generator import SceneGenerator
+from services.story_composer import StoryComposer
 from utils.file_handler import FileHandler, FileSaveError
 from utils.logger import get_logger
 
@@ -26,7 +29,9 @@ router = APIRouter(tags=["Story Generation"])
 logger = get_logger(__name__)
 
 scene_generator = LLMSceneGenerator()
+fast_scene_generator = SceneGenerator()
 prompt_generator = PromptGenerator()
+story_composer = StoryComposer()
 IMAGE_TIMEOUT_SECONDS = 300
 image_generator = ImageGenerator(generation_timeout_seconds=IMAGE_TIMEOUT_SECONDS)
 file_handler = FileHandler()
@@ -52,16 +57,21 @@ async def generate_story(api_request: Request, request: StoryRequest) -> StoryRe
         request.defer_images,
     )
 
-    story = request.story.strip()
-    if not story:
+    user_story = request.story.strip()
+    if not user_story:
         logger.warning("Empty story submitted")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Story cannot be empty.",
         )
+    story = story_composer.compose(
+        user_story,
+        target_duration_seconds=request.target_duration_seconds,
+    )
+    expanded_from_idea = story != " ".join(user_story.split()).strip()
 
     try:
-        scenes = scene_generator.extract_scenes(story)
+        scenes = _extract_scenes(story, expanded_from_idea=expanded_from_idea)
         logger.info("Scene extraction completed: %s scenes", len(scenes))
 
         if not scenes:
@@ -110,8 +120,8 @@ async def generate_story(api_request: Request, request: StoryRequest) -> StoryRe
             images=images,
             requested=not request.text_only,
         )
-        response_status = _build_response_status(image_summary)
-        message = _build_response_message(response_status, image_summary)
+        response_status = _build_response_status(image_summary, images)
+        message = _build_response_message(response_status, image_summary, images)
 
         logger.info("Saving completed story result")
         file_name = file_handler.save_story_result(
@@ -120,6 +130,7 @@ async def generate_story(api_request: Request, request: StoryRequest) -> StoryRe
             prompts=prompts,
             images=images,
             image_summary=image_summary,
+            target_duration_seconds=request.target_duration_seconds,
             status=response_status,
             message=message,
         )
@@ -130,6 +141,8 @@ async def generate_story(api_request: Request, request: StoryRequest) -> StoryRe
             status=response_status,
             message=message,
             file_name=file_name,
+            story=story,
+            target_duration_seconds=request.target_duration_seconds,
             scenes=scenes,
             prompts=prompts,
             images=images,
@@ -211,6 +224,8 @@ async def generate_image(
         status=image.status,
         image_path=image.image_path,
         image_url=image.image_url,
+        provider=image.provider,
+        warning=image.warning,
         error=image.error,
     )
 
@@ -223,6 +238,8 @@ def _build_skipped_images(scenes: list[Scene]) -> list[ImageResponse]:
             status="skipped",
             image_path=None,
             image_url=None,
+            provider=None,
+            warning=None,
             error="Image generation skipped by text-only mode.",
         )
         for scene in scenes
@@ -237,6 +254,8 @@ def _build_deferred_images(scenes: list[Scene]) -> list[ImageResponse]:
             status="skipped",
             image_path=None,
             image_url=None,
+            provider=None,
+            warning=None,
             error="Image generation deferred. Use /generate-image for this scene.",
         )
         for scene in scenes
@@ -254,7 +273,7 @@ def _attach_image_urls(
     for image in images:
         if image.image_path:
             image_path = image.image_path.replace("\\", "/").lstrip("/")
-            image_url = f"{public_base_url}/{image_path}"
+            image_url = f"{public_base_url}/{image_path}{_build_cache_buster(image_path)}"
             logger.info(
                 "Image URL generated for scene %s: status=%s path=%s url=%s",
                 image.scene,
@@ -281,6 +300,18 @@ def _get_public_base_url(request_base_url: str | None) -> str:
     return "http://127.0.0.1:8001"
 
 
+def _build_cache_buster(media_path: str) -> str:
+    """Return a cache-busting query for local generated media."""
+    normalized_path = Path(media_path.replace("\\", "/"))
+    if normalized_path.is_absolute() or ".." in normalized_path.parts:
+        return ""
+
+    try:
+        return f"?v={int(normalized_path.stat().st_mtime)}"
+    except OSError:
+        return ""
+
+
 def _build_image_summary(images: list[ImageResponse], requested: bool) -> ImageSummary:
     """Summarize scene-level image results."""
     return ImageSummary(
@@ -294,10 +325,14 @@ def _build_image_summary(images: list[ImageResponse], requested: bool) -> ImageS
 
 def _build_response_status(
     image_summary: ImageSummary,
+    images: list[ImageResponse],
 ) -> Literal["completed", "partial", "text_only"]:
     """Build the top-level response status from image generation results."""
     if not image_summary.requested:
         return "text_only"
+
+    if any(image.provider == "storyboard" and image.warning for image in images):
+        return "partial"
 
     if image_summary.failed:
         return "partial"
@@ -308,6 +343,7 @@ def _build_response_status(
 def _build_response_message(
     response_status: Literal["completed", "partial", "text_only"],
     image_summary: ImageSummary,
+    images: list[ImageResponse],
 ) -> str:
     """Build a concise user-facing status message."""
     if response_status == "text_only":
@@ -319,4 +355,18 @@ def _build_response_message(
     if image_summary.requested and image_summary.skipped:
         return IMAGE_DEFERRED_MESSAGE
 
+    if any(image.provider == "storyboard" and image.warning for image in images):
+        return (
+            "Story processed with local storyboard fallback because hosted image "
+            "providers failed."
+        )
+
     return "Story processed successfully."
+
+
+def _extract_scenes(story: str, expanded_from_idea: bool) -> list[Scene]:
+    """Use fast sentence splitting for generated idea stories."""
+    if expanded_from_idea:
+        return fast_scene_generator.extract_scenes(story)
+
+    return scene_generator.extract_scenes(story)

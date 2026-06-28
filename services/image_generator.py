@@ -47,14 +47,16 @@ class ImageGenerator:
     """Generate and persist scene images.
 
     The default provider is Pollinations, which runs remotely and saves the
-    returned image to the same local output path used by the frontend. fal.ai
-    and legacy local Stable Diffusion paths remain available as options.
+    returned image to the same local output path used by the frontend. Hugging
+    Face, fal.ai, and legacy local Stable Diffusion paths remain available as
+    options.
     """
 
     def __init__(
         self,
         image_provider: str | None = None,
         model_id: str | None = None,
+        hf_model_id: str | None = None,
         fal_model_id: str | None = None,
         output_dir: str | Path = "outputs/images",
         image_height: int | None = None,
@@ -70,6 +72,19 @@ class ImageGenerator:
         self.model_id = model_id or os.getenv(
             "CINEGEN_SD_MODEL_ID",
             "runwayml/stable-diffusion-v1-5",
+        )
+        self.hf_model_id = hf_model_id or os.getenv(
+            "CINEGEN_HF_MODEL_ID",
+            "black-forest-labs/FLUX.1-schnell",
+        )
+        self.hf_provider = os.getenv("CINEGEN_HF_PROVIDER", "hf-inference")
+        self.hf_negative_prompt = os.getenv("CINEGEN_HF_NEGATIVE_PROMPT")
+        self.hf_timeout_seconds = self._env_float(
+            "CINEGEN_HF_TIMEOUT_SECONDS",
+            180.0,
+        )
+        self.fallback_providers = self._parse_provider_list(
+            os.getenv("CINEGEN_IMAGE_FALLBACK_PROVIDERS", "fal,pollinations,storyboard")
         )
         self.fal_model_id = fal_model_id or os.getenv(
             "CINEGEN_FAL_MODEL_ID",
@@ -146,8 +161,12 @@ class ImageGenerator:
 
     def load_model(self) -> Any:
         """Load and cache the Stable Diffusion pipeline."""
-        if self.provider in {"fal", "pollinations"}:
+        if self.provider in {"fal", "huggingface", "pollinations"}:
             logger.info("%s uses a hosted model; no local pipeline to load", self.provider)
+            return None
+
+        if self.provider == "storyboard":
+            logger.info("storyboard uses local Pillow rendering; no pipeline to load")
             return None
 
         if self.pipeline is not None:
@@ -256,15 +275,67 @@ class ImageGenerator:
         started_at = perf_counter()
 
         if self.provider == "fal":
-            return self._generate_fal_image(
-                prompt_text=prompt_text,
-                scene=scene,
-                target_path=target_path,
-                started_at=started_at,
-            )
+            try:
+                return self._generate_fal_image(
+                    prompt_text=prompt_text,
+                    scene=scene,
+                    target_path=target_path,
+                    started_at=started_at,
+                )
+            except ImageGenerationError as exc:
+                fallback_image = self._generate_hosted_fallback_image(
+                    prompt_text=prompt_text,
+                    scene=scene,
+                    target_path=target_path,
+                    previous_error=exc,
+                )
+                if fallback_image is not None:
+                    return fallback_image
+
+                raise
+
+        if self.provider == "huggingface":
+            try:
+                return self._generate_huggingface_image(
+                    prompt_text=prompt_text,
+                    scene=scene,
+                    target_path=target_path,
+                    started_at=started_at,
+                )
+            except ImageGenerationError as exc:
+                fallback_image = self._generate_hosted_fallback_image(
+                    prompt_text=prompt_text,
+                    scene=scene,
+                    target_path=target_path,
+                    previous_error=exc,
+                )
+                if fallback_image is not None:
+                    return fallback_image
+
+                raise
 
         if self.provider == "pollinations":
-            return self._generate_pollinations_image(
+            try:
+                return self._generate_pollinations_image(
+                    prompt_text=prompt_text,
+                    scene=scene,
+                    target_path=target_path,
+                    started_at=started_at,
+                )
+            except ImageGenerationError as exc:
+                fallback_image = self._generate_hosted_fallback_image(
+                    prompt_text=prompt_text,
+                    scene=scene,
+                    target_path=target_path,
+                    previous_error=exc,
+                )
+                if fallback_image is not None:
+                    return fallback_image
+
+                raise
+
+        if self.provider == "storyboard":
+            return self._generate_storyboard_image(
                 prompt_text=prompt_text,
                 scene=scene,
                 target_path=target_path,
@@ -341,6 +412,180 @@ class ImageGenerator:
             status="success",
             image_path=target_path.as_posix(),
             image_url=None,
+            provider="stable-diffusion",
+            warning=None,
+            error=None,
+        )
+
+    def _generate_hosted_fallback_image(
+        self,
+        prompt_text: str,
+        scene: int,
+        target_path: Path,
+        previous_error: Exception,
+    ) -> ImageResponse | None:
+        """Try configured hosted providers after the primary provider fails."""
+        primary_error = previous_error
+        for fallback_provider in self.fallback_providers:
+            if fallback_provider == self.provider:
+                continue
+
+            fallback_started_at = perf_counter()
+            logger.warning(
+                "Primary image provider %s failed for scene %s; trying %s fallback: %s",
+                self.provider,
+                scene,
+                fallback_provider,
+                self._build_user_error_message(previous_error),
+            )
+
+            try:
+                if fallback_provider == "pollinations":
+                    return self._generate_pollinations_image(
+                        prompt_text=prompt_text,
+                        scene=scene,
+                        target_path=target_path,
+                        started_at=fallback_started_at,
+                    )
+
+                if fallback_provider == "fal":
+                    return self._generate_fal_image(
+                        prompt_text=prompt_text,
+                        scene=scene,
+                        target_path=target_path,
+                        started_at=fallback_started_at,
+                    )
+
+                if fallback_provider == "storyboard":
+                    return self._generate_storyboard_image(
+                        prompt_text=prompt_text,
+                        scene=scene,
+                        target_path=target_path,
+                        started_at=fallback_started_at,
+                        warning=self._build_fallback_warning(
+                            primary_error=primary_error,
+                            last_error=previous_error,
+                        ),
+                    )
+            except Exception as exc:
+                logger.exception(
+                    "Fallback image provider %s failed for scene %s",
+                    fallback_provider,
+                    scene,
+                )
+                logger.exception(traceback.format_exc())
+                previous_error = exc
+
+        return None
+
+    def _build_fallback_warning(
+        self,
+        primary_error: Exception,
+        last_error: Exception,
+    ) -> str:
+        """Build a concise warning for locally rendered storyboard fallbacks."""
+        primary_message = self._build_user_error_message(primary_error)
+        last_message = self._build_user_error_message(last_error)
+        warning = (
+            "Hosted image providers failed, so CineGen rendered a local storyboard "
+            f"fallback. Primary provider error: {primary_message}"
+        )
+
+        if last_message != primary_message:
+            warning = f"{warning} Last fallback error: {last_message}"
+
+        return warning
+
+    def _generate_storyboard_image(
+        self,
+        prompt_text: str,
+        scene: int,
+        target_path: Path,
+        started_at: float,
+        warning: str | None = None,
+    ) -> ImageResponse:
+        """Generate a local illustrated storyboard panel for one scene."""
+        logger.info("Rendering local storyboard image for scene %s", scene)
+
+        try:
+            image = self._create_storyboard_panel(prompt_text=prompt_text, scene=scene)
+            self._raise_if_generation_timed_out(scene=scene, started_at=started_at)
+        except Exception as exc:
+            error_trace = traceback.format_exc()
+            logger.exception("Local storyboard image rendering failed")
+            logger.exception(traceback.format_exc())
+            raise ImageGenerationError(error_trace) from exc
+
+        self._save_image(image=image, target_path=target_path, scene_number=scene)
+        logger.info(
+            "Local storyboard image ready for scene %s: path=%s elapsed=%.2fs",
+            scene,
+            target_path.as_posix(),
+            perf_counter() - started_at,
+        )
+        return ImageResponse(
+            scene=scene,
+            status="success",
+            image_path=target_path.as_posix(),
+            image_url=None,
+            provider="storyboard",
+            warning=warning,
+            error=None,
+        )
+
+    def _generate_huggingface_image(
+        self,
+        prompt_text: str,
+        scene: int,
+        target_path: Path,
+        started_at: float,
+    ) -> ImageResponse:
+        """Generate one image with Hugging Face Inference Providers."""
+        logger.info(
+            "Calling Hugging Face for scene %s: model=%s provider=%s width=%s height=%s steps=%s",
+            scene,
+            self.hf_model_id,
+            self.hf_provider,
+            self.image_width,
+            self.image_height,
+            self.num_inference_steps,
+        )
+
+        try:
+            image = self._call_huggingface_image(prompt_text)
+            self._raise_if_generation_timed_out(scene=scene, started_at=started_at)
+        except Exception as exc:
+            error_trace = traceback.format_exc()
+            logger.exception("Hugging Face image generation failed")
+            logger.exception(traceback.format_exc())
+            raise ImageGenerationError(error_trace) from exc
+
+        logger.info("Image generated")
+        logger.info(
+            "Image generation completed for scene %s in %.2fs",
+            scene,
+            perf_counter() - started_at,
+        )
+        logger.info("Saving image...")
+        self._save_image(image=image, target_path=target_path, scene_number=scene)
+        logger.info("Image saved: %s", target_path.as_posix())
+        logger.info(
+            "Generation completed in %.2f seconds",
+            perf_counter() - started_at,
+        )
+        logger.info(
+            "Image generation result ready for scene %s: status=success path=%s elapsed=%.2fs",
+            scene,
+            target_path.as_posix(),
+            perf_counter() - started_at,
+        )
+        return ImageResponse(
+            scene=scene,
+            status="success",
+            image_path=target_path.as_posix(),
+            image_url=None,
+            provider="huggingface",
+            warning=None,
             error=None,
         )
 
@@ -398,6 +643,8 @@ class ImageGenerator:
             status="success",
             image_path=target_path.as_posix(),
             image_url=None,
+            provider="pollinations",
+            warning=None,
             error=None,
         )
 
@@ -455,6 +702,8 @@ class ImageGenerator:
             status="success",
             image_path=target_path.as_posix(),
             image_url=None,
+            provider="fal",
+            warning=None,
             error=None,
         )
 
@@ -644,6 +893,65 @@ class ImageGenerator:
             )
 
         return failed_images
+
+    def _call_huggingface_image(self, prompt: str) -> Any:
+        """Call the configured Hugging Face text-to-image model."""
+        api_key = self._get_huggingface_key()
+
+        try:
+            from huggingface_hub import InferenceClient
+        except ImportError as exc:
+            raise ModelLoadError(
+                "huggingface-hub is not installed. Run: pip install -r requirements.txt"
+            ) from exc
+
+        client = InferenceClient(
+            model=self.hf_model_id,
+            provider=self._huggingface_provider_value(),
+            api_key=api_key,
+            timeout=self.hf_timeout_seconds,
+        )
+        return client.text_to_image(
+            prompt,
+            **self._build_huggingface_arguments(),
+        )
+
+    def _get_huggingface_key(self) -> str:
+        """Read the Hugging Face token from supported environment names."""
+        api_key = (
+            os.getenv("HF_TOKEN")
+            or os.getenv("HUGGINGFACEHUB_API_TOKEN")
+            or os.getenv("CINEGEN_HF_TOKEN")
+            or os.getenv("CINEGEN_HUGGINGFACE_TOKEN")
+        )
+        if not api_key:
+            raise ImageGenerationError(
+                "HF_TOKEN is required for Hugging Face image generation."
+            )
+
+        return api_key
+
+    def _huggingface_provider_value(self) -> str | None:
+        """Return the configured Hugging Face provider selector."""
+        provider = self.hf_provider.strip()
+        if not provider or provider.lower() in {"none", "default"}:
+            return None
+
+        return provider
+
+    def _build_huggingface_arguments(self) -> dict[str, Any]:
+        """Build Hugging Face text-to-image request arguments."""
+        arguments: dict[str, Any] = {
+            "height": self.image_height,
+            "width": self.image_width,
+            "num_inference_steps": self.num_inference_steps,
+            "guidance_scale": self.guidance_scale,
+        }
+
+        if self.hf_negative_prompt:
+            arguments["negative_prompt"] = self.hf_negative_prompt
+
+        return arguments
 
     def _call_pollinations_image(self, prompt: str) -> dict[str, Any]:
         """Call the Pollinations OpenAI-compatible image generation endpoint."""
@@ -1021,6 +1329,370 @@ class ImageGenerator:
             logger.exception(traceback.format_exc())
             raise ImageSaveError(error_trace) from exc
 
+    def _create_storyboard_panel(self, prompt_text: str, scene: int) -> Any:
+        """Create a local cinematic panel when hosted providers are unavailable."""
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+        except ImportError as exc:
+            raise ImageSaveError("Pillow is required to render storyboard images.") from exc
+
+        width = max(256, int(self.image_width))
+        height = max(256, int(self.image_height))
+        seed = sum(ord(character) for character in prompt_text) + scene * 97
+        palettes = [
+            ((31, 41, 55), (96, 165, 250), (248, 250, 252)),
+            ((76, 29, 149), (244, 114, 182), (254, 240, 138)),
+            ((20, 83, 45), (74, 222, 128), (240, 253, 244)),
+            ((127, 29, 29), (251, 146, 60), (255, 247, 237)),
+            ((30, 64, 175), (45, 212, 191), (240, 249, 255)),
+        ]
+        top_color, accent_color, glow_color = palettes[seed % len(palettes)]
+        image = Image.new("RGB", (width, height), top_color)
+        draw = ImageDraw.Draw(image, "RGBA")
+
+        self._draw_storyboard_background(draw, width, height, top_color, accent_color)
+        self._draw_storyboard_subject(draw, prompt_text, width, height, accent_color, glow_color)
+        self._draw_storyboard_frame(draw, width, height, scene, glow_color)
+        self._draw_storyboard_caption(draw, prompt_text, width, height)
+        return image
+
+    def _draw_storyboard_background(
+        self,
+        draw: Any,
+        width: int,
+        height: int,
+        top_color: tuple[int, int, int],
+        accent_color: tuple[int, int, int],
+    ) -> None:
+        """Draw a simple cinematic gradient and landscape."""
+        for y in range(height):
+            blend = y / max(1, height - 1)
+            color = tuple(
+                int(top_color[index] * (1 - blend) + accent_color[index] * blend * 0.75)
+                for index in range(3)
+            )
+            draw.line([(0, y), (width, y)], fill=(*color, 255))
+
+        horizon = int(height * 0.66)
+        draw.ellipse(
+            (int(width * 0.64), int(height * 0.1), int(width * 0.86), int(height * 0.32)),
+            fill=(255, 245, 180, 120),
+        )
+        draw.polygon(
+            [(0, horizon), (int(width * 0.22), int(height * 0.42)), (int(width * 0.48), horizon)],
+            fill=(15, 23, 42, 150),
+        )
+        draw.polygon(
+            [
+                (int(width * 0.32), horizon),
+                (int(width * 0.58), int(height * 0.38)),
+                (width, horizon),
+            ],
+            fill=(15, 23, 42, 130),
+        )
+        draw.rectangle((0, horizon, width, height), fill=(15, 23, 42, 105))
+
+    def _draw_storyboard_subject(
+        self,
+        draw: Any,
+        prompt_text: str,
+        width: int,
+        height: int,
+        accent_color: tuple[int, int, int],
+        glow_color: tuple[int, int, int],
+    ) -> None:
+        """Draw keyword-based scene motifs."""
+        lowered_prompt = prompt_text.lower()
+        if any(term in lowered_prompt for term in ("princess", "castle", "kingdom")):
+            self._draw_castle_scene(draw, width, height, accent_color, glow_color)
+            return
+
+        if any(term in lowered_prompt for term in ("forest", "tree", "magical")):
+            self._draw_forest_scene(draw, width, height, accent_color, glow_color)
+            return
+
+        if any(term in lowered_prompt for term in ("robot", "machine", "future")):
+            self._draw_robot_scene(draw, width, height, accent_color, glow_color)
+            return
+
+        if "dragon" in lowered_prompt:
+            self._draw_dragon_scene(draw, width, height, accent_color, glow_color)
+            return
+
+        self._draw_character_scene(draw, width, height, accent_color, glow_color)
+
+    def _draw_castle_scene(
+        self,
+        draw: Any,
+        width: int,
+        height: int,
+        accent_color: tuple[int, int, int],
+        glow_color: tuple[int, int, int],
+    ) -> None:
+        """Draw a castle and central character silhouette."""
+        base_y = int(height * 0.72)
+        castle_color = (*glow_color, 210)
+        shadow_color = (15, 23, 42, 230)
+        tower_width = int(width * 0.13)
+        center_x = width // 2
+
+        for offset in (-int(width * 0.24), 0, int(width * 0.24)):
+            x = center_x + offset
+            draw.rectangle(
+                (x - tower_width // 2, int(height * 0.36), x + tower_width // 2, base_y),
+                fill=shadow_color,
+                outline=castle_color,
+                width=3,
+            )
+            draw.polygon(
+                [
+                    (x - tower_width // 2, int(height * 0.36)),
+                    (x, int(height * 0.23)),
+                    (x + tower_width // 2, int(height * 0.36)),
+                ],
+                fill=(*accent_color, 220),
+                outline=castle_color,
+            )
+
+        draw.rectangle(
+            (int(width * 0.23), int(height * 0.49), int(width * 0.77), base_y),
+            fill=shadow_color,
+            outline=castle_color,
+            width=3,
+        )
+        draw.ellipse(
+            (int(width * 0.43), int(height * 0.47), int(width * 0.57), int(height * 0.61)),
+            fill=(*glow_color, 235),
+        )
+        draw.polygon(
+            [
+                (int(width * 0.5), int(height * 0.58)),
+                (int(width * 0.39), int(height * 0.82)),
+                (int(width * 0.61), int(height * 0.82)),
+            ],
+            fill=(*accent_color, 230),
+        )
+
+    def _draw_forest_scene(
+        self,
+        draw: Any,
+        width: int,
+        height: int,
+        accent_color: tuple[int, int, int],
+        glow_color: tuple[int, int, int],
+    ) -> None:
+        """Draw a magical forest composition."""
+        ground_y = int(height * 0.76)
+        for index, x in enumerate(range(int(width * 0.08), width, max(38, width // 7))):
+            tree_height = int(height * (0.3 + (index % 3) * 0.06))
+            trunk_width = max(8, width // 55)
+            draw.rectangle(
+                (x - trunk_width, ground_y - tree_height, x + trunk_width, ground_y),
+                fill=(64, 35, 20, 220),
+            )
+            draw.polygon(
+                [
+                    (x, ground_y - tree_height - int(height * 0.16)),
+                    (x - int(width * 0.08), ground_y - int(height * 0.08)),
+                    (x + int(width * 0.08), ground_y - int(height * 0.08)),
+                ],
+                fill=(*accent_color, 190),
+            )
+
+        for index in range(8):
+            x = int(width * (0.16 + index * 0.09))
+            y = int(height * (0.25 + (index % 4) * 0.08))
+            draw.ellipse((x, y, x + 8, y + 8), fill=(*glow_color, 210))
+
+    def _draw_robot_scene(
+        self,
+        draw: Any,
+        width: int,
+        height: int,
+        accent_color: tuple[int, int, int],
+        glow_color: tuple[int, int, int],
+    ) -> None:
+        """Draw a friendly robot motif."""
+        body = (
+            int(width * 0.34),
+            int(height * 0.42),
+            int(width * 0.66),
+            int(height * 0.77),
+        )
+        head = (
+            int(width * 0.38),
+            int(height * 0.25),
+            int(width * 0.62),
+            int(height * 0.45),
+        )
+        draw.rounded_rectangle(body, radius=18, fill=(15, 23, 42, 230), outline=(*glow_color, 230), width=4)
+        draw.rounded_rectangle(head, radius=16, fill=(*accent_color, 220), outline=(*glow_color, 230), width=4)
+        draw.ellipse((int(width * 0.43), int(height * 0.32), int(width * 0.47), int(height * 0.36)), fill=(*glow_color, 255))
+        draw.ellipse((int(width * 0.53), int(height * 0.32), int(width * 0.57), int(height * 0.36)), fill=(*glow_color, 255))
+        for index in range(5):
+            x = int(width * (0.25 + index * 0.12))
+            draw.line((x, int(height * 0.2), x, int(height * 0.86)), fill=(*glow_color, 80), width=2)
+
+    def _draw_dragon_scene(
+        self,
+        draw: Any,
+        width: int,
+        height: int,
+        accent_color: tuple[int, int, int],
+        glow_color: tuple[int, int, int],
+    ) -> None:
+        """Draw a dragon-like silhouette."""
+        body_box = (
+            int(width * 0.26),
+            int(height * 0.48),
+            int(width * 0.74),
+            int(height * 0.76),
+        )
+        draw.ellipse(body_box, fill=(*accent_color, 215), outline=(*glow_color, 230), width=4)
+        draw.polygon(
+            [
+                (int(width * 0.38), int(height * 0.52)),
+                (int(width * 0.18), int(height * 0.3)),
+                (int(width * 0.48), int(height * 0.42)),
+            ],
+            fill=(*glow_color, 145),
+        )
+        draw.polygon(
+            [
+                (int(width * 0.62), int(height * 0.52)),
+                (int(width * 0.82), int(height * 0.3)),
+                (int(width * 0.52), int(height * 0.42)),
+            ],
+            fill=(*glow_color, 145),
+        )
+        draw.ellipse(
+            (int(width * 0.64), int(height * 0.38), int(width * 0.79), int(height * 0.52)),
+            fill=(*accent_color, 240),
+            outline=(*glow_color, 230),
+            width=3,
+        )
+
+    def _draw_character_scene(
+        self,
+        draw: Any,
+        width: int,
+        height: int,
+        accent_color: tuple[int, int, int],
+        glow_color: tuple[int, int, int],
+    ) -> None:
+        """Draw a generic cinematic character scene."""
+        center_x = width // 2
+        draw.ellipse(
+            (center_x - int(width * 0.08), int(height * 0.32), center_x + int(width * 0.08), int(height * 0.48)),
+            fill=(*glow_color, 230),
+        )
+        draw.polygon(
+            [
+                (center_x, int(height * 0.47)),
+                (center_x - int(width * 0.16), int(height * 0.82)),
+                (center_x + int(width * 0.16), int(height * 0.82)),
+            ],
+            fill=(*accent_color, 225),
+        )
+        draw.ellipse(
+            (center_x - int(width * 0.24), int(height * 0.22), center_x + int(width * 0.24), int(height * 0.86)),
+            outline=(*glow_color, 115),
+            width=4,
+        )
+
+    def _draw_storyboard_frame(
+        self,
+        draw: Any,
+        width: int,
+        height: int,
+        scene: int,
+        glow_color: tuple[int, int, int],
+    ) -> None:
+        """Draw a polished frame and scene marker."""
+        margin = max(12, width // 36)
+        draw.rounded_rectangle(
+            (margin, margin, width - margin, height - margin),
+            radius=14,
+            outline=(*glow_color, 170),
+            width=3,
+        )
+        marker_size = max(34, width // 12)
+        draw.ellipse(
+            (margin * 2, margin * 2, margin * 2 + marker_size, margin * 2 + marker_size),
+            fill=(15, 23, 42, 185),
+            outline=(*glow_color, 180),
+            width=2,
+        )
+        font = self._load_storyboard_font(max(14, marker_size // 3), bold=True)
+        draw.text(
+            (margin * 2 + marker_size * 0.32, margin * 2 + marker_size * 0.23),
+            str(scene),
+            fill=(*glow_color, 255),
+            font=font,
+        )
+
+    def _draw_storyboard_caption(
+        self,
+        draw: Any,
+        prompt_text: str,
+        width: int,
+        height: int,
+    ) -> None:
+        """Draw a short unobtrusive caption from the scene prompt."""
+        caption = self._storyboard_caption_text(prompt_text)
+        if not caption:
+            return
+
+        font = self._load_storyboard_font(max(12, width // 40), bold=False)
+        panel_height = int(height * 0.16)
+        panel_top = height - panel_height - max(12, height // 36)
+        draw.rounded_rectangle(
+            (max(12, width // 36), panel_top, width - max(12, width // 36), height - max(12, height // 36)),
+            radius=12,
+            fill=(2, 6, 23, 150),
+        )
+        lines = self._wrap_placeholder_text(caption, max_chars=max(28, width // 15))[:3]
+        for index, line in enumerate(lines):
+            draw.text(
+                (max(22, width // 28), panel_top + 12 + index * max(15, width // 34)),
+                line,
+                fill=(248, 250, 252, 230),
+                font=font,
+            )
+
+    def _storyboard_caption_text(self, prompt_text: str) -> str:
+        """Extract the scene instruction from a generated prompt."""
+        marker = "Scene must clearly show:"
+        if marker in prompt_text:
+            caption = prompt_text.split(marker, 1)[1].split(",", 1)[0].strip()
+            return self._truncate_error_message(caption, max_length=120)
+
+        return self._truncate_error_message(prompt_text, max_length=120)
+
+    def _load_storyboard_font(
+        self,
+        size: int,
+        bold: bool = False,
+    ) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+        """Load a common font for local storyboard panels."""
+        try:
+            from PIL import ImageFont
+        except ImportError:
+            raise
+
+        candidates = (
+            ("arialbd.ttf", "DejaVuSans-Bold.ttf")
+            if bold
+            else ("arial.ttf", "DejaVuSans.ttf")
+        )
+        for font_name in candidates:
+            try:
+                return ImageFont.truetype(font_name, size)
+            except OSError:
+                continue
+
+        return ImageFont.load_default()
+
     def _coerce_prompt(self, prompt_item: Prompt | dict[str, Any]) -> tuple[str, int]:
         """Read prompt text and scene number from supported prompt objects."""
         if isinstance(prompt_item, Prompt):
@@ -1066,14 +1738,17 @@ class ImageGenerator:
         error: Exception | str,
         save_placeholder: bool = True,
     ) -> ImageResponse:
-        """Return a scene-level image failure with development traceback details."""
+        """Return a scene-level image failure with a user-safe error message."""
         try:
             scene = self._validate_scene_number(scene_number)
         except InvalidPromptError:
             scene = 1
 
         target_path = self._build_image_path(scene=scene)
-        error_message = str(error) or f"Image generation failed for scene {scene}."
+        error_message = self._build_user_error_message(
+            error,
+            fallback=f"Image generation failed for scene {scene}.",
+        )
         image_path = None
 
         logger.info(
@@ -1095,8 +1770,133 @@ class ImageGenerator:
             status="failed",
             image_path=image_path,
             image_url=None,
+            provider="placeholder" if image_path else None,
+            warning=None,
             error=error_message,
         )
+
+    def _build_user_error_message(
+        self,
+        error: Exception | str,
+        fallback: str = "Image generation failed.",
+    ) -> str:
+        """Convert tracebacks and provider payloads into concise UI text."""
+        raw_message = str(error).strip()
+        if not raw_message:
+            return fallback
+
+        message = self._extract_exception_message(raw_message)
+        lowered = message.lower()
+
+        if "pollinations" in lowered and "http 524" in lowered:
+            return (
+                "Pollinations timed out while generating the image. "
+                "Try again or lower the image quality/size."
+            )
+
+        if "status 524" in lowered or "error code: 524" in lowered:
+            return (
+                "Image generation timed out upstream. "
+                "Try again or lower the image quality/size."
+            )
+
+        if "remote end closed connection" in lowered:
+            return (
+                "The image provider closed the connection before returning an image. "
+                "Try again in a moment."
+            )
+
+        if (
+            "403 forbidden" in lowered
+            and (
+                "inference providers" in lowered
+                or "sufficient permissions" in lowered
+                or "huggingface" in lowered
+            )
+        ):
+            return (
+                "Hugging Face token lacks permission to call Inference Providers. "
+                "Create a token with Inference Providers access or switch image provider."
+            )
+
+        if "huggingface.co/docs/huggingface_hub/authentication" in lowered:
+            return (
+                "Hugging Face authentication failed. Check HF_TOKEN, or use the "
+                "Pollinations fallback provider."
+            )
+
+        if "invalid username or password" in lowered or "401" in lowered:
+            return (
+                "Hugging Face authentication failed. Check HF_TOKEN, or use the "
+                "Pollinations fallback provider."
+            )
+
+        if "hf_token" in lowered or "hugging face" in lowered and "token" in lowered:
+            return "HF_TOKEN is required for Hugging Face image generation."
+
+        if "pollinations" in lowered and "http 502" in lowered:
+            return (
+                "Pollinations image backend is temporarily unavailable (HTTP 502). "
+                "Try again later or use a different image provider."
+            )
+
+        if "exhausted balance" in lowered and "fal" in lowered:
+            return (
+                "fal.ai account balance is exhausted. Top up fal.ai billing or "
+                "use a different image provider."
+            )
+
+        if "user is locked" in lowered and "exhausted balance" in lowered:
+            return (
+                "fal.ai account balance is exhausted. Top up fal.ai billing or "
+                "use a different image provider."
+            )
+
+        if "bad_gateway" in lowered or "bad gateway" in lowered:
+            return (
+                "Image provider backend is temporarily unavailable (HTTP 502). "
+                "Try again later or use a different image provider."
+            )
+
+        return self._truncate_error_message(message)
+
+    def _extract_exception_message(self, raw_message: str) -> str:
+        """Return the final exception line from a traceback-like string."""
+        lines = [line.strip() for line in raw_message.splitlines() if line.strip()]
+        if not lines:
+            return raw_message
+
+        message = lines[-1]
+        if "Traceback (most recent call last)" in raw_message:
+            for line in reversed(lines):
+                if line.startswith(("File ", "^", "Traceback ")):
+                    continue
+                if line.startswith(("During handling", "The above exception")):
+                    continue
+                message = line
+                break
+
+        prefix, separator, detail = message.partition(": ")
+        if separator and ("." in prefix or prefix.endswith("Error")):
+            message = detail
+
+        return self._truncate_provider_payload(message)
+
+    def _truncate_provider_payload(self, message: str) -> str:
+        """Remove long structured provider response bodies from error text."""
+        for marker in (": {", ": [", "\n{", "\n["):
+            marker_index = message.find(marker)
+            if marker_index != -1:
+                return message[:marker_index].rstrip(".: ") + "."
+
+        return message
+
+    def _truncate_error_message(self, message: str, max_length: int = 240) -> str:
+        """Keep stored UI error messages short enough for cards and history."""
+        if len(message) <= max_length:
+            return message
+
+        return f"{message[: max_length - 1].rstrip()}..."
 
     def _save_placeholder_image(
         self,
@@ -1225,12 +2025,50 @@ class ImageGenerator:
         if normalized in {"fal", "flux", "fal-flux", "fal-ai"}:
             return "fal"
 
+        if normalized in {
+            "hf",
+            "hf-inference",
+            "hugging-face",
+            "huggingface",
+            "huggingface-hub",
+        }:
+            return "huggingface"
+
+        if normalized in {"storyboard", "storybook", "local-storyboard", "local-art"}:
+            return "storyboard"
+
         if normalized in {"stable", "stable-diffusion", "sd", "local"}:
             return "stable-diffusion"
 
         raise ValueError(
-            "CINEGEN_IMAGE_PROVIDER must be 'pollinations', 'fal', or 'stable-diffusion'."
+            "CINEGEN_IMAGE_PROVIDER must be 'pollinations', 'huggingface', 'fal', "
+            "'storyboard', or 'stable-diffusion'."
         )
+
+    def _parse_provider_list(self, raw_provider_list: str) -> list[str]:
+        """Parse a comma-separated provider list, skipping invalid names."""
+        providers: list[str] = []
+        for provider in raw_provider_list.split(","):
+            provider_name = provider.strip()
+            if not provider_name:
+                continue
+
+            try:
+                normalized_provider = self._normalize_provider(provider_name)
+            except ValueError:
+                logger.warning("Ignoring invalid fallback image provider: %s", provider)
+                continue
+
+            if normalized_provider == "stable-diffusion":
+                logger.warning(
+                    "Ignoring local Stable Diffusion as a hosted image fallback"
+                )
+                continue
+
+            if normalized_provider not in providers:
+                providers.append(normalized_provider)
+
+        return providers
 
     def _env_bool(self, name: str, default: bool) -> bool:
         """Read a boolean environment variable."""

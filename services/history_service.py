@@ -187,6 +187,8 @@ class HistoryService:
                     "status": "failed",
                     "image_path": None,
                     "image_url": None,
+                    "provider": None,
+                    "warning": None,
                     "error": error_message,
                 }
             )
@@ -208,6 +210,8 @@ class HistoryService:
                     "status": "failed",
                     "image_path": None,
                     "image_url": None,
+                    "provider": None,
+                    "warning": None,
                     "error": error_message,
                 }
             )
@@ -224,6 +228,8 @@ class HistoryService:
                 "status": "failed",
                 "image_path": image.image_path,
                 "image_url": None,
+                "provider": "placeholder",
+                "warning": None,
                 "error": error_message,
             }
         )

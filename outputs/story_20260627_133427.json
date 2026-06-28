@@ -1,0 +1,55 @@
+{
+  "success": true,
+  "status": "partial",
+  "message": "Image generation failed. Story generation completed.",
+  "story": "A boy is going to a house .\nShe eat a snacks.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "A boy is going to a house"
+    },
+    {
+      "scene": 2,
+      "description": "She eat a snacks"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "Scene must clearly show: A boy is going to a house, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 2,
+      "prompt": "Scene must clearly show: She eat a snacks, Main character: the same young boy from the story, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "failed",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_1.png?v=1782547464",
+      "error": "Pollinations request failed with HTTP 502."
+    },
+    {
+      "scene": 2,
+      "status": "failed",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_2.png?v=1782547467",
+      "error": "Pollinations request failed with HTTP 502."
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 2,
+    "succeeded": 0,
+    "failed": 2,
+    "skipped": 0
+  },
+  "audio": [],
+  "video_path": null,
+  "video_url": null,
+  "thumbnail_url": null,
+  "video_duration_seconds": null,
+  "generation_duration_seconds": null
+}

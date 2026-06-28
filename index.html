@@ -44,37 +44,53 @@
 
       <section class="studio-layout" aria-label="Story generation workspace">
         <aside class="generator-panel glass-panel">
-          <form id="storyForm" class="story-form">
+          <form id="storyForm" class="story-form" onsubmit="return false;">
             <div class="section-heading compact">
               <div>
                 <p class="eyebrow">Generate</p>
-                <h2>Story Input</h2>
+                <h2>Story Prompt</h2>
               </div>
             </div>
 
-            <label for="storyInput">Story</label>
+            <label for="storyInput">Story idea</label>
             <textarea
               id="storyInput"
               name="story"
               rows="12"
-              minlength="12"
-              placeholder="A girl enters a magical forest. She finds a glowing deer. The deer guides her to a waterfall."
+              minlength="3"
+              placeholder="Princess story, robot friendship, magical forest adventure..."
               required
             ></textarea>
 
             <div class="field-feedback">
-              <p id="storyHelp">Minimum 12 characters.</p>
+              <p id="storyHelp">Minimum 3 characters.</p>
               <p id="storyError" class="field-error" hidden></p>
             </div>
 
             <div class="toolbar">
-              <label class="switch-row" for="textOnlyToggle">
-                <input id="textOnlyToggle" name="text_only" type="checkbox" />
-                <span class="switch" aria-hidden="true"></span>
-                <span>Text only</span>
-              </label>
+              <div class="generation-options">
+                <label class="switch-row" for="textOnlyToggle">
+                  <input id="textOnlyToggle" name="text_only" type="checkbox" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>Text only</span>
+                </label>
 
-              <button id="generateButton" class="primary-button" type="submit">
+                <label class="duration-field" for="targetDurationInput">
+                  <span>Video length</span>
+                  <input
+                    id="targetDurationInput"
+                    name="target_duration_seconds"
+                    type="number"
+                    min="10"
+                    max="120"
+                    step="5"
+                    value="30"
+                  />
+                  <span>sec</span>
+                </label>
+              </div>
+
+              <button id="generateButton" class="primary-button" type="button">
                 <span class="button-label">Generate</span>
                 <span class="button-spinner" aria-hidden="true"></span>
               </button>
@@ -131,6 +147,14 @@
               >
                 Download Story Results
               </button>
+              <button
+                id="downloadVideoButton"
+                class="secondary-button"
+                type="button"
+                disabled
+              >
+                Download MP4
+              </button>
             </div>
           </div>
 
@@ -171,6 +195,16 @@
               </div>
               <div id="imagesGallery" class="image-grid empty-state" aria-live="polite">
                 <p>No images generated yet.</p>
+              </div>
+            </article>
+
+            <article class="dashboard-card video-card">
+              <div class="card-header">
+                <span class="card-kicker">Generated Video</span>
+                <span id="videoStatusBadge" class="count-badge">0:00</span>
+              </div>
+              <div id="videoPanel" class="video-panel empty-state" aria-live="polite">
+                <p>No video generated yet.</p>
               </div>
             </article>
           </div>

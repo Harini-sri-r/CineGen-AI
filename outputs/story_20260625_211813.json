@@ -1,0 +1,72 @@
+{
+  "success": true,
+  "status": "completed",
+  "message": "Story video generated successfully.",
+  "story": "A girl enters a forest . she saw an beautiful flower",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "A girl enters a forest"
+    },
+    {
+      "scene": 2,
+      "description": "She saw a beautiful flower"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "cinematic fantasy forest, magical lighting, a girl enters a forest, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    },
+    {
+      "scene": 2,
+      "prompt": "she saw a beautiful flower, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "success",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_1.png?v=1782402401",
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_2.png?v=1782402493",
+      "error": null
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 2,
+    "succeeded": 2,
+    "failed": 0,
+    "skipped": 0
+  },
+  "audio": [
+    {
+      "scene": 1,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_1.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_1.mp3",
+      "duration_seconds": 2.47,
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_2.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_2.mp3",
+      "duration_seconds": null,
+      "error": null
+    }
+  ],
+  "video_path": "outputs/videos/story_20260625_211813.mp4",
+  "video_url": "outputs/videos/story_20260625_211813.mp4",
+  "thumbnail_url": "http://127.0.0.1:8001/outputs/images/scene_1.png?v=1782402401",
+  "video_duration_seconds": 9.67,
+  "generation_duration_seconds": 59.29398859990761
+}

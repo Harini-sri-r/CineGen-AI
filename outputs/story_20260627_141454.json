@@ -1,0 +1,86 @@
+{
+  "success": true,
+  "status": "text_only",
+  "message": "Story processed in text-only mode; image generation skipped.",
+  "story": "An opening image introduces a princess in a world full of possibility. A sudden problem interrupts a princess and creates a clear mission. A princess follows a clue into a striking new place. A difficult choice tests a princess when the journey becomes dangerous.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "A princess is introduced in a world full of possibility"
+    },
+    {
+      "scene": 2,
+      "description": "A sudden problem interrupts a princess and creates a clear mission"
+    },
+    {
+      "scene": 3,
+      "description": "A princess follows a clue into a striking new place"
+    },
+    {
+      "scene": 4,
+      "description": "A difficult choice tests a princess when the journey becomes dangerous"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "Scene must clearly show: A princess is introduced in a world full of possibility, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 2,
+      "prompt": "Scene must clearly show: A sudden problem interrupts a princess and creates a clear mission, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 3,
+      "prompt": "Scene must clearly show: A princess follows a clue into a striking new place, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 4,
+      "prompt": "Scene must clearly show: A difficult choice tests a princess when the journey becomes dangerous, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "skipped",
+      "image_path": null,
+      "image_url": null,
+      "error": "Image generation skipped by text-only mode."
+    },
+    {
+      "scene": 2,
+      "status": "skipped",
+      "image_path": null,
+      "image_url": null,
+      "error": "Image generation skipped by text-only mode."
+    },
+    {
+      "scene": 3,
+      "status": "skipped",
+      "image_path": null,
+      "image_url": null,
+      "error": "Image generation skipped by text-only mode."
+    },
+    {
+      "scene": 4,
+      "status": "skipped",
+      "image_path": null,
+      "image_url": null,
+      "error": "Image generation skipped by text-only mode."
+    }
+  ],
+  "image_summary": {
+    "requested": false,
+    "total": 4,
+    "succeeded": 0,
+    "failed": 0,
+    "skipped": 4
+  },
+  "audio": [],
+  "video_path": null,
+  "video_url": null,
+  "thumbnail_url": null,
+  "video_duration_seconds": null,
+  "target_duration_seconds": 20,
+  "generation_duration_seconds": null
+}

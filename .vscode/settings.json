@@ -1,0 +1,12 @@
+{
+  "liveServer.settings.ignoreFiles": [
+    "**/outputs/**",
+    "**/__pycache__/**",
+    "**/.pytest_cache/**"
+  ],
+  "files.watcherExclude": {
+    "**/outputs/**": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true
+  }
+}

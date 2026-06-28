@@ -1,0 +1,152 @@
+{
+  "success": true,
+  "status": "completed",
+  "message": "Story video generated successfully.",
+  "story": "At the beginning, a fox lives in a familiar world with a dream that feels just out of reach. A surprising call to adventure pulls a fox away from safety and gives the journey a clear purpose. A setback forces a fox to choose between the easy path and doing what is right. A fox faces the final challenge and changes the outcome with a brave choice. In the final quiet moment, a fox returns changed, and the world feels whole and hopeful again.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "At the beginning, a fox lives in a familiar world with a dream that feels just out of reach"
+    },
+    {
+      "scene": 2,
+      "description": "A surprising call to adventure pulls a fox away from safety and gives the journey a clear purpose"
+    },
+    {
+      "scene": 3,
+      "description": "A setback forces a fox to choose between the easy path and doing what is right"
+    },
+    {
+      "scene": 4,
+      "description": "A fox faces the final challenge and changes the outcome with a brave choice"
+    },
+    {
+      "scene": 5,
+      "description": "In the final quiet moment, a fox returns changed, and the world feels whole and hopeful again"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "Scene must clearly show: At the beginning, a fox lives in a familiar world with a dream that feels just out of reach, children's animated storybook illustration, 2D cartoon style for kids, bright cheerful colors, soft rounded shapes, simple expressive characters, gentle magical atmosphere, clear subject focus, safe and wholesome, no photorealism, no live action, no real people, no documentary photography, no realistic street photo, no abstract patterns, no glitch artifacts, no distorted subjects, no scary imagery, no violence, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 2,
+      "prompt": "Scene must clearly show: A surprising call to adventure pulls a fox away from safety and gives the journey a clear purpose, children's animated storybook illustration, 2D cartoon style for kids, bright cheerful colors, soft rounded shapes, simple expressive characters, gentle magical atmosphere, clear subject focus, safe and wholesome, no photorealism, no live action, no real people, no documentary photography, no realistic street photo, no abstract patterns, no glitch artifacts, no distorted subjects, no scary imagery, no violence, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 3,
+      "prompt": "Scene must clearly show: A setback forces a fox to choose between the easy path and doing what is right, children's animated storybook illustration, 2D cartoon style for kids, bright cheerful colors, soft rounded shapes, simple expressive characters, gentle magical atmosphere, clear subject focus, safe and wholesome, no photorealism, no live action, no real people, no documentary photography, no realistic street photo, no abstract patterns, no glitch artifacts, no distorted subjects, no scary imagery, no violence, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 4,
+      "prompt": "Scene must clearly show: A fox faces the final challenge and changes the outcome with a brave choice, children's animated storybook illustration, 2D cartoon style for kids, bright cheerful colors, soft rounded shapes, simple expressive characters, gentle magical atmosphere, clear subject focus, safe and wholesome, no photorealism, no live action, no real people, no documentary photography, no realistic street photo, no abstract patterns, no glitch artifacts, no distorted subjects, no scary imagery, no violence, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 5,
+      "prompt": "Scene must clearly show: In the final quiet moment, a fox returns changed, and the world feels whole and hopeful again, children's animated storybook illustration, 2D cartoon style for kids, bright cheerful colors, soft rounded shapes, simple expressive characters, gentle magical atmosphere, clear subject focus, safe and wholesome, no photorealism, no live action, no real people, no documentary photography, no realistic street photo, no abstract patterns, no glitch artifacts, no distorted subjects, no scary imagery, no violence, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "success",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_1.png?v=1782658372",
+      "provider": "pollinations",
+      "warning": null,
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_2.png?v=1782658381",
+      "provider": "pollinations",
+      "warning": null,
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "image_path": "outputs/images/scene_3.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_3.png?v=1782658391",
+      "provider": "pollinations",
+      "warning": null,
+      "error": null
+    },
+    {
+      "scene": 4,
+      "status": "success",
+      "image_path": "outputs/images/scene_4.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_4.png?v=1782658398",
+      "provider": "pollinations",
+      "warning": null,
+      "error": null
+    },
+    {
+      "scene": 5,
+      "status": "success",
+      "image_path": "outputs/images/scene_5.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_5.png?v=1782658406",
+      "provider": "pollinations",
+      "warning": null,
+      "error": null
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 5,
+    "succeeded": 5,
+    "failed": 0,
+    "skipped": 0
+  },
+  "audio": [
+    {
+      "scene": 1,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_1.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_1.mp3",
+      "duration_seconds": 5.66,
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_2.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_2.mp3",
+      "duration_seconds": 5.9,
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_3.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_3.mp3",
+      "duration_seconds": 5.04,
+      "error": null
+    },
+    {
+      "scene": 4,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_4.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_4.mp3",
+      "duration_seconds": 4.78,
+      "error": null
+    },
+    {
+      "scene": 5,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_5.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_5.mp3",
+      "duration_seconds": 6.05,
+      "error": null
+    }
+  ],
+  "video_path": "outputs/videos/story_20260628_202326.mp4",
+  "video_url": "outputs/videos/story_20260628_202326.mp4",
+  "thumbnail_url": "http://127.0.0.1:8001/outputs/images/scene_1.png?v=1782658372",
+  "video_duration_seconds": 29.54999999999999,
+  "target_duration_seconds": 30,
+  "generation_duration_seconds": 258.3093667000003
+}

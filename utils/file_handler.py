@@ -8,7 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from models.story import ImageResponse, ImageSummary, Prompt, Scene
+from models.story import AudioResponse, ImageResponse, ImageSummary, Prompt, Scene
 
 
 class FileSaveError(RuntimeError):
@@ -30,11 +30,22 @@ class FileHandler:
         prompts: list[Prompt],
         images: list[ImageResponse] | None = None,
         image_summary: ImageSummary | None = None,
+        audio: list[AudioResponse] | None = None,
+        video_path: str | None = None,
+        video_url: str | None = None,
+        thumbnail_url: str | None = None,
+        video_duration_seconds: float | None = None,
+        target_duration_seconds: int | None = None,
+        generation_duration_seconds: float | None = None,
         status: str | None = None,
         message: str | None = None,
+        file_name: str | None = None,
     ) -> str:
         """Save a processed story result and return the JSON file name."""
-        file_name = self._build_file_name()
+        file_name = file_name or self._build_file_name()
+        if not self._is_safe_story_file_name(file_name):
+            raise FileSaveError(f"Unsafe story output filename: {file_name}")
+
         target_path = self.output_dir / file_name
 
         payload = {
@@ -48,6 +59,13 @@ class FileHandler:
             "image_summary": (
                 image_summary.model_dump() if image_summary is not None else None
             ),
+            "audio": self._serialize_models(audio or []),
+            "video_path": video_path,
+            "video_url": video_url,
+            "thumbnail_url": thumbnail_url,
+            "video_duration_seconds": video_duration_seconds,
+            "target_duration_seconds": target_duration_seconds,
+            "generation_duration_seconds": generation_duration_seconds,
         }
 
         try:
@@ -57,8 +75,8 @@ class FileHandler:
 
         return file_name
 
-    def update_story_image(self, file_name: str, image: ImageResponse) -> None:
-        """Update one scene image record in a saved story JSON file."""
+    def read_story_result(self, file_name: str) -> dict[str, Any]:
+        """Read a saved story JSON payload."""
         if not self._is_safe_story_file_name(file_name):
             raise FileSaveError(f"Unsafe story output filename: {file_name}")
 
@@ -68,6 +86,12 @@ class FileHandler:
                 payload: dict[str, Any] = json.load(story_file)
         except (OSError, json.JSONDecodeError) as exc:
             raise FileSaveError(f"Failed to read output file: {target_path}") from exc
+
+        return payload
+
+    def update_story_image(self, file_name: str, image: ImageResponse) -> None:
+        """Update one scene image record in a saved story JSON file."""
+        payload = self.read_story_result(file_name)
 
         images = [
             ImageResponse.model_validate(item)
@@ -94,9 +118,43 @@ class FileHandler:
         payload["message"] = self._build_message(updated_images)
 
         try:
-            self._write_json_atomic(target_path, payload)
+            self._write_json_atomic(self.output_dir / file_name, payload)
         except OSError as exc:
-            raise FileSaveError(f"Failed to save output file: {target_path}") from exc
+            raise FileSaveError(
+                f"Failed to save output file: {self.output_dir / file_name}"
+            ) from exc
+
+    def update_story_video(
+        self,
+        file_name: str,
+        audio: list[AudioResponse],
+        video_path: str | None,
+        thumbnail_url: str | None,
+        video_duration_seconds: float | None,
+        target_duration_seconds: int | None,
+        generation_duration_seconds: float | None,
+        status: str,
+        message: str,
+    ) -> None:
+        """Update video and narration metadata in a saved story JSON file."""
+        payload = self.read_story_result(file_name)
+
+        payload["audio"] = self._serialize_models(audio)
+        payload["video_path"] = video_path
+        payload["video_url"] = video_path
+        payload["thumbnail_url"] = thumbnail_url
+        payload["video_duration_seconds"] = video_duration_seconds
+        payload["target_duration_seconds"] = target_duration_seconds
+        payload["generation_duration_seconds"] = generation_duration_seconds
+        payload["status"] = status
+        payload["message"] = message
+
+        try:
+            self._write_json_atomic(self.output_dir / file_name, payload)
+        except OSError as exc:
+            raise FileSaveError(
+                f"Failed to save output file: {self.output_dir / file_name}"
+            ) from exc
 
     def _build_file_name(self) -> str:
         """Build an output file name using the required timestamp format."""

@@ -1,0 +1,101 @@
+{
+  "success": true,
+  "status": "text_only",
+  "message": "Story processed in text-only mode; image generation skipped.",
+  "story": "An opening image introduces A boy eats ice cream outside a small shop in a world full of possibility. A sudden problem interrupts A boy eats ice cream outside a small shop and creates a clear mission. A boy eats ice cream outside a small shop follows a clue into a striking new place. A difficult choice tests A boy eats ice cream outside a small shop when the journey becomes dangerous. A boy eats ice cream outside a small shop discovers the courage needed to change the outcome.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "An opening image introduces A boy eats ice cream outside a small shop in a world full of possibility"
+    },
+    {
+      "scene": 2,
+      "description": "A sudden problem interrupts A boy eats ice cream outside a small shop and creates a clear mission"
+    },
+    {
+      "scene": 3,
+      "description": "A boy eats ice cream outside a small shop follows a clue into a striking new place"
+    },
+    {
+      "scene": 4,
+      "description": "A difficult choice tests A boy eats ice cream outside a small shop when the journey becomes dangerous"
+    },
+    {
+      "scene": 5,
+      "description": "A boy eats ice cream outside a small shop discovers the courage needed to change the outcome"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "Scene must clearly show: An opening image introduces A boy eats ice cream outside a small shop in a world full of possibility, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark"
+    },
+    {
+      "scene": 2,
+      "prompt": "Scene must clearly show: A sudden problem interrupts A boy eats ice cream outside a small shop and creates a clear mission, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark"
+    },
+    {
+      "scene": 3,
+      "prompt": "Scene must clearly show: A boy eats ice cream outside a small shop follows a clue into a striking new place, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark"
+    },
+    {
+      "scene": 4,
+      "prompt": "Scene must clearly show: A difficult choice tests A boy eats ice cream outside a small shop when the journey becomes dangerous, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark"
+    },
+    {
+      "scene": 5,
+      "prompt": "Scene must clearly show: A boy eats ice cream outside a small shop discovers the courage needed to change the outcome, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "skipped",
+      "image_path": null,
+      "image_url": null,
+      "error": "Image generation skipped by text-only mode."
+    },
+    {
+      "scene": 2,
+      "status": "skipped",
+      "image_path": null,
+      "image_url": null,
+      "error": "Image generation skipped by text-only mode."
+    },
+    {
+      "scene": 3,
+      "status": "skipped",
+      "image_path": null,
+      "image_url": null,
+      "error": "Image generation skipped by text-only mode."
+    },
+    {
+      "scene": 4,
+      "status": "skipped",
+      "image_path": null,
+      "image_url": null,
+      "error": "Image generation skipped by text-only mode."
+    },
+    {
+      "scene": 5,
+      "status": "skipped",
+      "image_path": null,
+      "image_url": null,
+      "error": "Image generation skipped by text-only mode."
+    }
+  ],
+  "image_summary": {
+    "requested": false,
+    "total": 5,
+    "succeeded": 0,
+    "failed": 0,
+    "skipped": 5
+  },
+  "audio": [],
+  "video_path": null,
+  "video_url": null,
+  "thumbnail_url": null,
+  "video_duration_seconds": null,
+  "target_duration_seconds": 30,
+  "generation_duration_seconds": null
+}

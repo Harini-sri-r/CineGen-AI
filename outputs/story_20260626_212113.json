@@ -1,0 +1,72 @@
+{
+  "success": true,
+  "status": "partial",
+  "message": "Story video generated successfully.",
+  "story": "a boy is walking in a forest.he saw a tiger",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "A boy is walking in a forest"
+    },
+    {
+      "scene": 2,
+      "description": "He sees a tiger"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "Scene must clearly show: A boy is walking in a forest, cinematic fantasy forest, magical lighting, young boy visible as the main character, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 2,
+      "prompt": "Scene must clearly show: He sees a tiger, Setting: inside the same natural forest, Main character: the same young boy from the story, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "failed",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_1.png?v=1782488940",
+      "error": "Traceback (most recent call last):\n  File \"C:\\Users\\harin\\OneDrive\\Documents\\Projects\\cinegen_ai\\services\\image_generator.py\", line 364, in _generate_pollinations_image\n    result = self._call_pollinations_image(prompt_text)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\OneDrive\\Documents\\Projects\\cinegen_ai\\services\\image_generator.py\", line 666, in _call_pollinations_image\n    with urlopen(\n         ^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 216, in urlopen\n    return opener.open(url, data, timeout)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 519, in open\n    response = self._open(req, data)\n               ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 536, in _open\n    result = self._call_chain(self.handle_open, protocol, protocol +\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 496, in _call_chain\n    result = func(*args)\n             ^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 1391, in https_open\n    return self.do_open(http.client.HTTPSConnection, req,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 1352, in do_open\n    r = h.getresponse()\n        ^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\http\\client.py\", line 1374, in getresponse\n    response.begin()\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\http\\client.py\", line 318, in begin\n    version, status, reason = self._read_status()\n                              ^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\http\\client.py\", line 287, in _read_status\n    raise RemoteDisconnected(\"Remote end closed connection without\"\nhttp.client.RemoteDisconnected: Remote end closed connection without response\n"
+    },
+    {
+      "scene": 2,
+      "status": "failed",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_2.png?v=1782489073",
+      "error": "Traceback (most recent call last):\n  File \"C:\\Users\\harin\\OneDrive\\Documents\\Projects\\cinegen_ai\\services\\image_generator.py\", line 666, in _call_pollinations_image\n    with urlopen(\n         ^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 216, in urlopen\n    return opener.open(url, data, timeout)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 525, in open\n    response = meth(req, response)\n               ^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 634, in http_response\n    response = self.parent.error(\n               ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 563, in error\n    return self._call_chain(*args)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 496, in _call_chain\n    result = func(*args)\n             ^^^^^^^^^^^\n  File \"C:\\Users\\harin\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\urllib\\request.py\", line 643, in http_error_default\n    raise HTTPError(req.full_url, code, msg, hdrs, fp)\nurllib.error.HTTPError: HTTP Error 524: <none>\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\Users\\harin\\OneDrive\\Documents\\Projects\\cinegen_ai\\services\\image_generator.py\", line 364, in _generate_pollinations_image\n    result = self._call_pollinations_image(prompt_text)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\harin\\OneDrive\\Documents\\Projects\\cinegen_ai\\services\\image_generator.py\", line 673, in _call_pollinations_image\n    raise ImageGenerationError(\nservices.image_generator.ImageGenerationError: Pollinations request failed with HTTP 524: {\"success\":false,\"error\":{\"message\":\"Image backend rejected request with status 524\",\"code\":\"UNKNOWN_ERROR\",\"timestamp\":\"2026-06-26T15:51:12.976Z\",\"details\":{\"name\":\"UpstreamError\",\"upstreamStatus\":524,\"upstreamHost\":\"ua39ysr9i86nil-8767.proxy.runpod.net\",\"upstreamBody\":\"error code: 524\\n\"},\"cause\":{\"status\":524,\"details\":{\"body\":\"error code: 524\\n\"},\"upstreamUrl\":\"https://ua39ysr9i86nil-8767.proxy.runpod.net/generate\",\"name\":\"HttpError\"}},\"status\":524}\n"
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 2,
+    "succeeded": 0,
+    "failed": 2,
+    "skipped": 0
+  },
+  "audio": [
+    {
+      "scene": 1,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_1.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_1.mp3",
+      "duration_seconds": 2.64,
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_2.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_2.mp3",
+      "duration_seconds": 2.11,
+      "error": null
+    }
+  ],
+  "video_path": "outputs/videos/story_20260626_212113.mp4",
+  "video_url": "outputs/videos/story_20260626_212113.mp4",
+  "thumbnail_url": "http://127.0.0.1:8001/outputs/images/scene_1.png?v=1782488940",
+  "video_duration_seconds": 7.95,
+  "generation_duration_seconds": 54.70240930002183
+}

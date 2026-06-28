@@ -1,0 +1,86 @@
+{
+  "success": true,
+  "status": "partial",
+  "message": "Image generation failed. Story generation completed.",
+  "story": "An opening image introduces a princess in a world full of possibility. A sudden problem interrupts a princess and creates a clear mission. A princess follows a clue into a striking new place. A difficult choice tests a princess when the journey becomes dangerous.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "An opening image introduces a princess in a world full of possibility"
+    },
+    {
+      "scene": 2,
+      "description": "A sudden problem interrupts a princess and creates a clear mission"
+    },
+    {
+      "scene": 3,
+      "description": "A princess follows a clue into a striking new place"
+    },
+    {
+      "scene": 4,
+      "description": "A difficult choice tests a princess when the journey becomes dangerous"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "Scene must clearly show: An opening image introduces a princess in a world full of possibility, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 2,
+      "prompt": "Scene must clearly show: A sudden problem interrupts a princess and creates a clear mission, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 3,
+      "prompt": "Scene must clearly show: A princess follows a clue into a striking new place, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    },
+    {
+      "scene": 4,
+      "prompt": "Scene must clearly show: A difficult choice tests a princess when the journey becomes dangerous, photorealistic cinematic still, clear subject focus, dramatic lighting, sharp detailed image, natural colors, 4k movie scene, no abstract patterns, no glitch artifacts, no distorted subjects, no text, no watermark, no city, buildings, roads, cars, or indoor rooms"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "failed",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_1.png?v=1782551076",
+      "error": "Hugging Face authentication failed. Check HF_TOKEN, or use the Pollinations fallback provider."
+    },
+    {
+      "scene": 2,
+      "status": "failed",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_2.png?v=1782551079",
+      "error": "Hugging Face authentication failed. Check HF_TOKEN, or use the Pollinations fallback provider."
+    },
+    {
+      "scene": 3,
+      "status": "failed",
+      "image_path": "outputs/images/scene_3.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_3.png?v=1782551081",
+      "error": "Hugging Face authentication failed. Check HF_TOKEN, or use the Pollinations fallback provider."
+    },
+    {
+      "scene": 4,
+      "status": "failed",
+      "image_path": "outputs/images/scene_4.png",
+      "image_url": "http://127.0.0.1:8003/outputs/images/scene_4.png?v=1782551083",
+      "error": "Hugging Face authentication failed. Check HF_TOKEN, or use the Pollinations fallback provider."
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 4,
+    "succeeded": 0,
+    "failed": 4,
+    "skipped": 0
+  },
+  "audio": [],
+  "video_path": null,
+  "video_url": null,
+  "thumbnail_url": null,
+  "video_duration_seconds": null,
+  "target_duration_seconds": 10,
+  "generation_duration_seconds": null
+}

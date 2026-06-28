@@ -1,10 +1,11 @@
 """History API routes for saved CineGen AI generations."""
 
 import os
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, status
 
-from models.story import HistoryDetail, HistoryItem, HistoryStats, ImageResponse
+from models.story import AudioResponse, HistoryDetail, HistoryItem, HistoryStats, ImageResponse
 from services.history_service import HistoryService
 from utils.logger import get_logger
 
@@ -83,26 +84,83 @@ def _attach_history_image_urls(
     detail: HistoryDetail,
     request_base_url: str | None,
 ) -> HistoryDetail:
-    """Attach browser-accessible image URLs to history detail responses."""
+    """Attach browser-accessible media URLs to history detail responses."""
     public_base_url = _get_public_base_url(request_base_url)
     images: list[ImageResponse] = []
+    audio: list[AudioResponse] = []
 
     for image in detail.images:
         if image.image_path:
-            image_path = image.image_path.replace("\\", "/").lstrip("/")
-            image_url = f"{public_base_url}/{image_path}"
+            image_url = _build_media_url(
+                image.image_path,
+                public_base_url=public_base_url,
+                cache_bust=True,
+            )
             logger.info(
                 "History image URL generated for scene %s: status=%s path=%s url=%s",
                 image.scene,
                 image.status,
-                image_path,
+                image.image_path,
                 image_url,
             )
             images.append(image.model_copy(update={"image_url": image_url}))
         else:
             images.append(image.model_copy(update={"image_url": None}))
 
-    return detail.model_copy(update={"images": images})
+    for audio_item in detail.audio:
+        if audio_item.audio_path:
+            audio.append(
+                audio_item.model_copy(
+                    update={
+                        "audio_url": _build_media_url(
+                            audio_item.audio_path,
+                            public_base_url=public_base_url,
+                        )
+                    }
+                )
+            )
+        else:
+            audio.append(audio_item.model_copy(update={"audio_url": None}))
+
+    video_url = detail.video_url
+    if detail.video_path:
+        video_url = _build_media_url(detail.video_path, public_base_url=public_base_url)
+    elif video_url and not video_url.startswith(("http://", "https://")):
+        video_url = _build_media_url(video_url, public_base_url=public_base_url)
+
+    return detail.model_copy(
+        update={
+            "images": images,
+            "audio": audio,
+            "video_url": video_url,
+        }
+    )
+
+
+def _build_media_url(
+    media_path: str,
+    public_base_url: str,
+    cache_bust: bool = False,
+) -> str:
+    """Build a browser URL for a saved output path."""
+    if media_path.startswith(("http://", "https://")):
+        return media_path
+
+    normalized_path = media_path.replace("\\", "/").lstrip("/")
+    cache_buster = _build_cache_buster(normalized_path) if cache_bust else ""
+    return f"{public_base_url}/{normalized_path}{cache_buster}"
+
+
+def _build_cache_buster(media_path: str) -> str:
+    """Return a cache-busting query for local generated media."""
+    normalized_path = Path(media_path.replace("\\", "/"))
+    if normalized_path.is_absolute() or ".." in normalized_path.parts:
+        return ""
+
+    try:
+        return f"?v={int(normalized_path.stat().st_mtime)}"
+    except OSError:
+        return ""
 
 
 def _get_public_base_url(request_base_url: str | None) -> str:

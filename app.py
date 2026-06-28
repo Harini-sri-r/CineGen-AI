@@ -13,6 +13,7 @@ load_dotenv(Path(__file__).with_name(".env"))
 
 from routes.generate import router as generate_router
 from routes.history import router as history_router
+from routes.video import router as video_router
 from utils.logger import get_logger, setup_logging
 
 setup_logging()
@@ -20,7 +21,13 @@ logger = get_logger(__name__)
 
 OUTPUTS_DIR = Path("outputs")
 IMAGES_DIR = OUTPUTS_DIR / "images"
+AUDIO_DIR = OUTPUTS_DIR / "audio"
+VIDEOS_DIR = OUTPUTS_DIR / "videos"
+MUSIC_DIR = Path("assets") / "music"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+MUSIC_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(
     title="CineGen AI",
@@ -42,6 +49,7 @@ app.add_middleware(
 
 app.include_router(generate_router)
 app.include_router(history_router)
+app.include_router(video_router)
 app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
 

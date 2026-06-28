@@ -1,0 +1,95 @@
+{
+  "success": true,
+  "status": "completed",
+  "message": "Story video generated successfully.",
+  "story": "A brave explorer discovers an ancient jungle temple hidden beneath giant trees. Inside, glowing crystals illuminate mysterious walls covered with forgotten symbols. Suddenly, a magical guardian awakens and leads the explorer to a hidden chamber containing a legendary golden artifact.",
+  "scenes": [
+    {
+      "scene": 1,
+      "description": "A brave explorer discovers an ancient jungle temple hidden beneath giant trees"
+    },
+    {
+      "scene": 2,
+      "description": "Inside, glowing crystals illuminate mysterious walls covered with forgotten symbols"
+    },
+    {
+      "scene": 3,
+      "description": "Suddenly, a magical guardian awakens and leads the explorer to a hidden chamber containing a legendary golden artifact"
+    }
+  ],
+  "prompts": [
+    {
+      "scene": 1,
+      "prompt": "lush cinematic jungle, misty atmosphere, a brave explorer discovers an ancient jungle temple hidden beneath giant trees, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    },
+    {
+      "scene": 2,
+      "prompt": "ethereal glow, volumetric lighting, inside, glowing crystals illuminate mysterious walls covered with forgotten symbols, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    },
+    {
+      "scene": 3,
+      "prompt": "enchanted atmosphere, volumetric lighting, suddenly, a magical guardian awakens and leads the explorer to a hidden chamber containing a legendary golden artifact, cinematic composition, dramatic lighting, ultra realistic, 4k movie scene"
+    }
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "status": "success",
+      "image_path": "outputs/images/scene_1.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_1.png",
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "image_path": "outputs/images/scene_2.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_2.png",
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "image_path": "outputs/images/scene_3.png",
+      "image_url": "http://127.0.0.1:8001/outputs/images/scene_3.png",
+      "error": null
+    }
+  ],
+  "image_summary": {
+    "requested": true,
+    "total": 3,
+    "succeeded": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "audio": [
+    {
+      "scene": 1,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_1.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_1.mp3",
+      "duration_seconds": 1.27,
+      "error": null
+    },
+    {
+      "scene": 2,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_2.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_2.mp3",
+      "duration_seconds": 0.31,
+      "error": null
+    },
+    {
+      "scene": 3,
+      "status": "success",
+      "audio_path": "outputs/audio/scene_3.mp3",
+      "audio_url": "http://127.0.0.1:8001/outputs/audio/scene_3.mp3",
+      "duration_seconds": null,
+      "error": null
+    }
+  ],
+  "video_path": "outputs/videos/story_20260625_182703.mp4",
+  "video_url": "outputs/videos/story_20260625_182703.mp4",
+  "thumbnail_url": "http://127.0.0.1:8001/outputs/images/scene_1.png",
+  "video_duration_seconds": 9.02,
+  "generation_duration_seconds": 87.17794440011494
+}
