@@ -1,43 +1,160 @@
-# CineGen AI
+# 🎬 CineGen AI: Multimodal Story-to-Video Generation Using LLMs and AI
 
-Generate cinematic scene prompts, images, narration, and MP4 videos from a
-story or a short idea such as `princess story`.
+<div align="center">
 
-The browser UI includes a video length control. Set it to `20`, `30`, or any
-value from 10 to 120 seconds before generating.
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green?logo=fastapi)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow?logo=javascript)
+![License](https://img.shields.io/badge/License-MIT-orange)
+![Status](https://img.shields.io/badge/Status-Completed-success)
 
-## Hugging Face image generation
+**Transform plain text stories into cinematic AI-generated videos with narration, scene images, and intelligent storytelling.**
 
-Set these values in `.env` to use Hugging Face Inference Providers:
+</div>
 
-```env
-CINEGEN_IMAGE_PROVIDER=huggingface
-HF_TOKEN=your_hugging_face_token
-CINEGEN_HF_MODEL_ID=black-forest-labs/FLUX.1-schnell
-CINEGEN_HF_PROVIDER=hf-inference
-CINEGEN_IMAGE_FALLBACK_PROVIDERS=fal,pollinations,storyboard
-CINEGEN_IMAGE_WIDTH=512
-CINEGEN_IMAGE_HEIGHT=512
-CINEGEN_INFERENCE_STEPS=25
-CINEGEN_GUIDANCE_SCALE=7.0
+---
+
+# 📖 Overview
+
+CineGen AI is an AI-powered multimedia generation platform that converts a simple story into a narrated cinematic video.
+
+The application uses a Large Language Model (Llama 3) to understand the story, divide it into meaningful scenes, generate detailed prompts, create AI images, synthesize narration, and finally compose everything into a professional MP4 video.
+
+Unlike traditional text-to-image generators, CineGen AI produces a complete storytelling experience including:
+
+* 🧠 AI Scene Understanding
+* 🎨 AI Image Generation
+* 🎙️ AI Voice Narration
+* 🎬 Automatic Video Generation
+* 📂 Generation History
+* 📥 Downloadable Videos
+
+---
+
+# 🚀 Features
+
+## ✨ AI Story Processing
+
+* Story Validation
+* Scene Extraction using Llama 3
+* Intelligent Prompt Generation
+* Multi-scene Story Understanding
+
+---
+
+## 🖼️ AI Image Generation
+
+* Pollinations AI Integration
+* High-quality Scene Images
+* Automatic Placeholder Recovery
+* Image Download Support
+
+---
+
+## 🎙️ AI Voice Narration
+
+* Edge-TTS
+* Natural Human-like Voice
+* Scene-wise Audio Generation
+
+---
+
+## 🎬 Video Generation
+
+* MoviePy
+* MP4 Rendering
+* Automatic Scene Timing
+* Fade Transitions
+* Ken Burns Zoom Effect
+* Intro Title
+* End Credits
+* Optional Background Music
+
+---
+
+## 🌐 Modern Web Interface
+
+* Responsive UI
+* Progress Tracking
+* Story Dashboard
+* Scene Cards
+* Prompt Viewer
+* Image Gallery
+* Embedded Video Player
+* Download Video
+* Open Video in New Tab
+
+---
+
+## 📚 History System
+
+* Previous Stories
+* Previous Images
+* Previous Videos
+* Statistics Dashboard
+* Replay Generated Videos
+
+---
+
+# 🏗️ System Architecture
+
+```text
+                 User Story
+                      │
+                      ▼
+              FastAPI Backend
+                      │
+      ┌───────────────┼───────────────┐
+      │               │               │
+      ▼               ▼               ▼
+ Scene Extraction  Prompt Generator  Story Validation
+      │
+      ▼
+  Ollama Llama 3
+      │
+      ▼
+ Pollinations AI
+      │
+      ▼
+ Scene Images
+      │
+      ▼
+ Edge-TTS Narration
+      │
+      ▼
+ MoviePy Video Composer
+      │
+      ▼
+ MP4 Video Generation
+      │
+      ▼
+ Frontend Video Player
 ```
 
-`HF_TOKEN` must have permission to call Hugging Face Inference Providers. If the
-token exists but lacks that access, the API returns `403 Forbidden` and CineGen
-falls back to the next configured image provider.
+---
 
-Short ideas and one-sentence stories are expanded into multiple scenes, so a
-normal generation produces at least 3 scene images.
+# 🛠️ Technology Stack
 
-If all hosted image providers fail or their credentials are missing, `storyboard`
-renders local illustrated PNG panels so the project still returns visible scene
-images.
+### Backend
 
-Run the API:
+* Python 3.11
+* FastAPI
+* Uvicorn
+* Pydantic
 
-```powershell
-pip install -r requirements.txt
-python -m uvicorn app:app --reload --port 8001
-```
+### AI & ML
 
-Open `index.html` in your browser and generate a story.
+* Ollama Llama 3
+* Pollinations AI
+* Edge-TTS
+
+### Video Processing
+
+* MoviePy
+* FFmpeg
+
+### Frontend
+
+* HTML5
+* CSS3
+* JavaScript
