@@ -8,6 +8,7 @@ from io import BytesIO
 import json
 import os
 from pathlib import Path
+import re
 from threading import Lock
 from time import perf_counter
 import traceback
@@ -1339,22 +1340,128 @@ class ImageGenerator:
         width = max(256, int(self.image_width))
         height = max(256, int(self.image_height))
         seed = sum(ord(character) for character in prompt_text) + scene * 97
-        palettes = [
-            ((31, 41, 55), (96, 165, 250), (248, 250, 252)),
-            ((76, 29, 149), (244, 114, 182), (254, 240, 138)),
-            ((20, 83, 45), (74, 222, 128), (240, 253, 244)),
-            ((127, 29, 29), (251, 146, 60), (255, 247, 237)),
-            ((30, 64, 175), (45, 212, 191), (240, 249, 255)),
-        ]
-        top_color, accent_color, glow_color = palettes[seed % len(palettes)]
+        environment = self._storyboard_environment(prompt_text)
+        top_color, accent_color, glow_color = self._storyboard_palette(
+            environment=environment,
+            seed=seed,
+        )
         image = Image.new("RGB", (width, height), top_color)
         draw = ImageDraw.Draw(image, "RGBA")
 
-        self._draw_storyboard_background(draw, width, height, top_color, accent_color)
+        self._draw_storyboard_background(
+            draw,
+            width,
+            height,
+            top_color,
+            accent_color,
+            glow_color,
+            environment,
+        )
         self._draw_storyboard_subject(draw, prompt_text, width, height, accent_color, glow_color)
         self._draw_storyboard_frame(draw, width, height, scene, glow_color)
         self._draw_storyboard_caption(draw, prompt_text, width, height)
         return image
+
+    def _storyboard_environment(self, prompt_text: str) -> str:
+        """Infer a local storyboard background from the prompt."""
+        lowered_prompt = prompt_text.lower()
+        environment_keywords: tuple[tuple[str, tuple[str, ...]], ...] = (
+            ("space", ("space", "spaceship", "astronaut", "planet", "rocket", "star")),
+            ("ocean", ("ocean", "sea", "beach", "island", "ship", "pirate", "harbor", "mermaid")),
+            ("river", ("river", "waterfall", "lake")),
+            ("future", ("robot", "machine", "future", "lab", "workshop")),
+            ("town", ("city", "street", "town", "road", "shop", "school", "park")),
+            ("indoor", ("home", "house", "room", "kitchen", "bedroom", "library", "museum", "classroom")),
+            ("desert", ("desert", "sand", "dune")),
+            ("cave", ("cave", "underground")),
+            ("garden", ("garden", "flower", "meadow", "farm")),
+            ("castle", ("castle", "kingdom", "princess", "prince", "queen", "wizard")),
+            ("forest", ("forest", "woods", "jungle", "tree")),
+            ("mountain", ("mountain", "snow")),
+        )
+
+        for environment, keywords in environment_keywords:
+            if any(self._prompt_has_keyword(lowered_prompt, keyword) for keyword in keywords):
+                return environment
+
+        return "storybook"
+
+    def _prompt_has_keyword(self, lowered_prompt: str, keyword: str) -> bool:
+        """Match a prompt keyword without accidental substring hits."""
+        lowered_keyword = keyword.lower()
+        if " " in lowered_keyword:
+            return lowered_keyword in lowered_prompt
+
+        return re.search(
+            rf"(?<![a-z0-9]){re.escape(lowered_keyword)}(?![a-z0-9])",
+            lowered_prompt,
+        ) is not None
+
+    def _storyboard_palette(
+        self,
+        environment: str,
+        seed: int,
+    ) -> tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]:
+        """Return a palette matched to the inferred storyboard environment."""
+        palettes_by_environment: dict[
+            str,
+            tuple[tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]], ...],
+        ] = {
+            "castle": (
+                ((88, 28, 135), (244, 114, 182), (254, 240, 138)),
+                ((67, 56, 202), (192, 132, 252), (250, 245, 255)),
+            ),
+            "forest": (
+                ((20, 83, 45), (74, 222, 128), (240, 253, 244)),
+                ((22, 101, 52), (132, 204, 22), (236, 253, 245)),
+            ),
+            "ocean": (
+                ((14, 116, 144), (45, 212, 191), (240, 253, 250)),
+                ((30, 64, 175), (125, 211, 252), (240, 249, 255)),
+            ),
+            "river": (
+                ((30, 64, 175), (45, 212, 191), (240, 249, 255)),
+                ((21, 94, 117), (103, 232, 249), (236, 254, 255)),
+            ),
+            "town": (
+                ((124, 45, 18), (251, 146, 60), (255, 247, 237)),
+                ((30, 64, 175), (250, 204, 21), (254, 252, 232)),
+            ),
+            "indoor": (
+                ((120, 53, 15), (251, 191, 36), (255, 251, 235)),
+                ((67, 56, 202), (251, 207, 232), (253, 242, 248)),
+            ),
+            "future": (
+                ((15, 23, 42), (56, 189, 248), (224, 242, 254)),
+                ((49, 46, 129), (129, 140, 248), (238, 242, 255)),
+            ),
+            "space": (
+                ((17, 24, 39), (99, 102, 241), (224, 231, 255)),
+                ((30, 27, 75), (168, 85, 247), (245, 243, 255)),
+            ),
+            "desert": (
+                ((146, 64, 14), (251, 191, 36), (255, 251, 235)),
+                ((127, 29, 29), (251, 146, 60), (255, 247, 237)),
+            ),
+            "cave": (
+                ((30, 41, 59), (14, 165, 233), (224, 242, 254)),
+                ((76, 29, 149), (45, 212, 191), (240, 253, 250)),
+            ),
+            "garden": (
+                ((21, 128, 61), (244, 114, 182), (240, 253, 244)),
+                ((77, 124, 15), (250, 204, 21), (254, 252, 232)),
+            ),
+            "mountain": (
+                ((30, 64, 175), (147, 197, 253), (239, 246, 255)),
+                ((51, 65, 85), (186, 230, 253), (248, 250, 252)),
+            ),
+            "storybook": (
+                ((31, 41, 55), (96, 165, 250), (248, 250, 252)),
+                ((76, 29, 149), (244, 114, 182), (254, 240, 138)),
+            ),
+        }
+        palettes = palettes_by_environment.get(environment, palettes_by_environment["storybook"])
+        return palettes[seed % len(palettes)]
 
     def _draw_storyboard_background(
         self,
@@ -1363,8 +1470,10 @@ class ImageGenerator:
         height: int,
         top_color: tuple[int, int, int],
         accent_color: tuple[int, int, int],
+        glow_color: tuple[int, int, int],
+        environment: str,
     ) -> None:
-        """Draw a simple cinematic gradient and landscape."""
+        """Draw a storyboard background matched to the scene prompt."""
         for y in range(height):
             blend = y / max(1, height - 1)
             color = tuple(
@@ -1375,9 +1484,182 @@ class ImageGenerator:
 
         horizon = int(height * 0.66)
         draw.ellipse(
-            (int(width * 0.64), int(height * 0.1), int(width * 0.86), int(height * 0.32)),
-            fill=(255, 245, 180, 120),
+            (int(width * 0.66), int(height * 0.09), int(width * 0.86), int(height * 0.29)),
+            fill=(*glow_color, 115),
         )
+
+        if environment == "space":
+            for index in range(28):
+                x = int(width * ((index * 37) % 100) / 100)
+                y = int(height * (0.08 + ((index * 19) % 48) / 100))
+                draw.ellipse((x, y, x + 3, y + 3), fill=(*glow_color, 210))
+            draw.ellipse(
+                (int(width * 0.12), int(height * 0.18), int(width * 0.34), int(height * 0.4)),
+                fill=(*accent_color, 155),
+                outline=(*glow_color, 160),
+                width=3,
+            )
+            draw.rectangle((0, horizon, width, height), fill=(15, 23, 42, 155))
+            return
+
+        if environment == "ocean":
+            draw.rectangle((0, horizon, width, height), fill=(14, 116, 144, 150))
+            for index in range(5):
+                y = horizon + int(height * (0.05 + index * 0.055))
+                draw.arc(
+                    (int(width * -0.05), y, int(width * 1.05), y + int(height * 0.18)),
+                    180,
+                    360,
+                    fill=(*glow_color, 145),
+                    width=3,
+                )
+            draw.polygon(
+                [
+                    (int(width * 0.1), horizon),
+                    (int(width * 0.25), int(height * 0.5)),
+                    (int(width * 0.42), horizon),
+                ],
+                fill=(34, 197, 94, 145),
+            )
+            return
+
+        if environment == "river":
+            draw.rectangle((0, horizon, width, height), fill=(22, 101, 52, 120))
+            draw.polygon(
+                [
+                    (int(width * 0.35), horizon),
+                    (int(width * 0.58), horizon),
+                    (int(width * 0.86), height),
+                    (int(width * 0.13), height),
+                ],
+                fill=(14, 165, 233, 150),
+            )
+            for index in range(4):
+                y = horizon + int(height * (0.08 + index * 0.07))
+                draw.line(
+                    (int(width * 0.24), y, int(width * 0.76), y + int(height * 0.04)),
+                    fill=(*glow_color, 120),
+                    width=2,
+                )
+            return
+
+        if environment == "town":
+            draw.rectangle((0, horizon, width, height), fill=(71, 85, 105, 135))
+            for index, x in enumerate(range(int(width * 0.05), width, max(46, width // 5))):
+                building_height = int(height * (0.22 + (index % 3) * 0.06))
+                draw.rounded_rectangle(
+                    (x, horizon - building_height, x + int(width * 0.16), horizon + 8),
+                    radius=6,
+                    fill=(*glow_color, 140),
+                    outline=(*accent_color, 170),
+                    width=2,
+                )
+                draw.rectangle(
+                    (x + 8, horizon - int(building_height * 0.45), x + int(width * 0.16) - 8, horizon - int(building_height * 0.28)),
+                    fill=(*accent_color, 150),
+                )
+            draw.polygon(
+                [
+                    (int(width * 0.44), horizon),
+                    (int(width * 0.56), horizon),
+                    (int(width * 0.75), height),
+                    (int(width * 0.25), height),
+                ],
+                fill=(15, 23, 42, 115),
+            )
+            return
+
+        if environment == "indoor":
+            draw.rectangle((0, int(height * 0.45), width, height), fill=(120, 53, 15, 95))
+            draw.rectangle(
+                (int(width * 0.1), int(height * 0.13), int(width * 0.34), int(height * 0.42)),
+                fill=(*glow_color, 130),
+                outline=(*accent_color, 170),
+                width=3,
+            )
+            draw.line((0, int(height * 0.45), width, int(height * 0.45)), fill=(*glow_color, 95), width=3)
+            draw.rounded_rectangle(
+                (int(width * 0.62), int(height * 0.22), int(width * 0.86), int(height * 0.72)),
+                radius=8,
+                fill=(15, 23, 42, 90),
+                outline=(*glow_color, 120),
+                width=2,
+            )
+            return
+
+        if environment == "future":
+            draw.rectangle((0, horizon, width, height), fill=(15, 23, 42, 135))
+            for index in range(6):
+                x = int(width * (0.08 + index * 0.16))
+                draw.line((x, int(height * 0.18), x, height), fill=(*glow_color, 70), width=2)
+            for index in range(4):
+                y = int(height * (0.22 + index * 0.13))
+                draw.line((0, y, width, y + int(height * 0.04)), fill=(*accent_color, 65), width=3)
+            draw.rounded_rectangle(
+                (int(width * 0.12), int(height * 0.2), int(width * 0.32), int(height * 0.42)),
+                radius=10,
+                fill=(*glow_color, 85),
+                outline=(*accent_color, 160),
+                width=2,
+            )
+            return
+
+        if environment == "desert":
+            draw.rectangle((0, horizon, width, height), fill=(251, 191, 36, 115))
+            for index in range(3):
+                y = horizon + int(height * (0.02 + index * 0.08))
+                draw.arc(
+                    (int(width * -0.1), y, int(width * 1.1), y + int(height * 0.28)),
+                    180,
+                    360,
+                    fill=(*glow_color, 95),
+                    width=4,
+                )
+            return
+
+        if environment == "cave":
+            draw.rectangle((0, horizon, width, height), fill=(15, 23, 42, 160))
+            draw.ellipse(
+                (int(width * -0.1), int(height * 0.18), int(width * 1.1), int(height * 1.15)),
+                outline=(15, 23, 42, 190),
+                width=max(24, width // 11),
+            )
+            for index in range(6):
+                x = int(width * (0.16 + index * 0.13))
+                draw.polygon(
+                    [
+                        (x, int(height * 0.76)),
+                        (x - int(width * 0.035), int(height * 0.58)),
+                        (x + int(width * 0.045), int(height * 0.64)),
+                    ],
+                    fill=(*glow_color, 130),
+                )
+            return
+
+        if environment == "garden":
+            draw.rectangle((0, horizon, width, height), fill=(22, 163, 74, 120))
+            for index in range(14):
+                x = int(width * (0.08 + (index * 0.07) % 0.86))
+                y = int(height * (0.67 + (index % 4) * 0.05))
+                draw.ellipse((x, y, x + 10, y + 10), fill=(*accent_color, 185))
+                draw.line((x + 5, y + 10, x + 5, y + 24), fill=(22, 101, 52, 190), width=2)
+            return
+
+        if environment == "forest":
+            draw.rectangle((0, horizon, width, height), fill=(20, 83, 45, 135))
+            for index, x in enumerate(range(int(width * 0.06), width, max(36, width // 8))):
+                tree_top = int(height * (0.25 + (index % 3) * 0.04))
+                draw.rectangle((x - 6, tree_top + 30, x + 6, horizon + 14), fill=(64, 35, 20, 185))
+                draw.polygon(
+                    [
+                        (x, tree_top),
+                        (x - int(width * 0.07), horizon - int(height * 0.02)),
+                        (x + int(width * 0.07), horizon - int(height * 0.02)),
+                    ],
+                    fill=(*accent_color, 145),
+                )
+            return
+
         draw.polygon(
             [(0, horizon), (int(width * 0.22), int(height * 0.42)), (int(width * 0.48), horizon)],
             fill=(15, 23, 42, 150),
@@ -1403,19 +1685,28 @@ class ImageGenerator:
     ) -> None:
         """Draw keyword-based scene motifs."""
         lowered_prompt = prompt_text.lower()
-        if any(term in lowered_prompt for term in ("princess", "castle", "kingdom")):
+        if any(
+            self._prompt_has_keyword(lowered_prompt, term)
+            for term in ("princess", "castle", "kingdom")
+        ):
             self._draw_castle_scene(draw, width, height, accent_color, glow_color)
             return
 
-        if any(term in lowered_prompt for term in ("forest", "tree", "magical")):
+        if any(
+            self._prompt_has_keyword(lowered_prompt, term)
+            for term in ("forest", "tree", "woods", "jungle")
+        ):
             self._draw_forest_scene(draw, width, height, accent_color, glow_color)
             return
 
-        if any(term in lowered_prompt for term in ("robot", "machine", "future")):
+        if any(
+            self._prompt_has_keyword(lowered_prompt, term)
+            for term in ("robot", "machine", "future")
+        ):
             self._draw_robot_scene(draw, width, height, accent_color, glow_color)
             return
 
-        if "dragon" in lowered_prompt:
+        if self._prompt_has_keyword(lowered_prompt, "dragon"):
             self._draw_dragon_scene(draw, width, height, accent_color, glow_color)
             return
 

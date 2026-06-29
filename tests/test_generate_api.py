@@ -31,10 +31,10 @@ def test_generate_story_text_only_returns_skipped_images(tmp_path, monkeypatch) 
     assert data["status"] == "text_only"
     assert data["image_summary"] == {
         "requested": False,
-        "total": 5,
+        "total": 2,
         "succeeded": 0,
         "failed": 0,
-        "skipped": 5,
+        "skipped": 2,
     }
     assert all(image["status"] == "skipped" for image in data["images"])
     assert (tmp_path / data["file_name"]).exists()

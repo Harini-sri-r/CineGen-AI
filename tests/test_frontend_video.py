@@ -58,7 +58,7 @@ def test_frontend_script_contains_video_generation_flow() -> None:
     assert "target_duration_seconds" in script
     assert "document.createElement(\"video\")" in script
     assert "video.controls = true" in script
-    assert "Generate MP4" in script
+    assert "Generate Video" in script
     assert "downloadVideo" in script
 
 
@@ -71,6 +71,18 @@ def test_frontend_only_successful_images_drive_downloads_and_video() -> None:
     assert "Storyboard fallback" in script
     assert "Pollinations timed out while generating the image" in script
     assert 'image.status !== "skipped" &&' not in script
+
+
+def test_frontend_hides_internal_prompt_text() -> None:
+    script = Path("script.js").read_text(encoding="utf-8")
+
+    assert "formatVisualBrief" in script
+    assert "buildPublicStoryExport" in script
+    assert "createParagraph(prompt.prompt)" not in script
+    assert 'item.prompt || "Prompt unavailable."' not in script
+    assert 'prompt?.prompt || "Prompt unavailable."' not in script
+    assert "${prompt.scene}. ${prompt.prompt}" not in script
+    assert "downloadJson(latestResult" not in script
 
 
 def test_live_server_ignores_generated_outputs() -> None:

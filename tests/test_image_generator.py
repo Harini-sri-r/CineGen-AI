@@ -477,6 +477,16 @@ def test_storyboard_provider_generates_local_scene_image(tmp_path) -> None:
     assert Path(image.image_path).stat().st_size > 1_000
 
 
+def test_storyboard_environment_is_prompt_specific(tmp_path) -> None:
+    generator = ImageGenerator(image_provider="storyboard", output_dir=tmp_path)
+
+    assert generator._storyboard_environment("A pirate ship reaches a sunny island") == "ocean"
+    assert generator._storyboard_environment("A robot wakes in a repair workshop") == "future"
+    assert generator._storyboard_environment("A city street at night") == "town"
+    assert generator._storyboard_environment("A sparkling cave opens softly") == "cave"
+    assert generator._storyboard_environment("A child finds a magical clue") == "storybook"
+
+
 def test_pollinations_provider_generates_and_saves_returned_image(
     tmp_path,
     monkeypatch,

@@ -4,73 +4,147 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CineGen AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body class="light-mode">
     <section id="authShell" class="auth-shell">
+      <div class="auth-ambient" aria-hidden="true"></div>
+
       <div class="auth-brand">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <div>
-          <p class="eyebrow">AI Video SaaS</p>
-          <h1>CineGen AI</h1>
+        <a class="brand-lockup" href="/login" data-auth-route="/login" aria-label="CineGen AI login">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>CineGen AI</span>
+        </a>
+        <div class="auth-hero-copy">
+          <p class="eyebrow">AI video workspace</p>
+          <h1>Turn ideas into cinematic stories.</h1>
+          <p>
+            Generate scenes, images, narration, and videos from one focused creative
+            dashboard.
+          </p>
+        </div>
+        <div class="auth-proof-grid" aria-label="Product highlights">
+          <span>Scene planning</span>
+          <span>AI image generation</span>
+          <span>Video rendering</span>
         </div>
       </div>
 
       <article id="loginPage" class="auth-card auth-view">
-        <p class="eyebrow">Welcome back</p>
-        <h2>Login</h2>
+        <div class="auth-card-heading">
+          <p class="eyebrow">Welcome back</p>
+          <h2>Login</h2>
+          <p>Continue your story production workspace.</p>
+        </div>
         <form id="loginForm" class="auth-form">
           <label for="loginEmail">Email</label>
-          <input id="loginEmail" name="email" type="email" autocomplete="email" required />
-
-          <label for="loginPassword">Password</label>
           <input
-            id="loginPassword"
-            name="password"
-            type="password"
-            autocomplete="current-password"
+            id="loginEmail"
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com"
             required
           />
 
-          <label class="switch-row auth-remember" for="rememberMeToggle">
-            <input id="rememberMeToggle" name="remember_me" type="checkbox" checked />
-            <span class="switch" aria-hidden="true"></span>
-            <span>Remember me</span>
-          </label>
+          <label for="loginPassword">Password</label>
+          <div class="password-field">
+            <input
+              id="loginPassword"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Enter password"
+              required
+            />
+            <button
+              class="password-toggle"
+              type="button"
+              data-password-toggle="#loginPassword"
+              aria-label="Show password"
+            >
+              Show
+            </button>
+          </div>
+
+          <div class="auth-row">
+            <label class="switch-row auth-remember" for="rememberMeToggle">
+              <input id="rememberMeToggle" name="remember_me" type="checkbox" checked />
+              <span class="switch" aria-hidden="true"></span>
+              <span>Remember me</span>
+            </label>
+            <button class="text-button" type="button" data-auth-route="/forgot-password">
+              Forgot password?
+            </button>
+          </div>
 
           <button id="loginButton" class="primary-button" type="submit">Login</button>
         </form>
         <div class="auth-links">
+          <span>New to CineGen?</span>
           <button class="text-button" type="button" data-auth-route="/register">
             Create account
-          </button>
-          <button class="text-button" type="button" data-auth-route="/forgot-password">
-            Forgot password?
           </button>
         </div>
       </article>
 
       <article id="registerPage" class="auth-card auth-view" hidden>
-        <p class="eyebrow">Start creating</p>
-        <h2>Register</h2>
+        <div class="auth-card-heading">
+          <p class="eyebrow">Start creating</p>
+          <h2>Register</h2>
+          <p>Create a private workspace for your stories, images, and videos.</p>
+        </div>
         <form id="registerForm" class="auth-form">
           <label for="registerUsername">Username</label>
-          <input id="registerUsername" name="username" type="text" autocomplete="username" required />
-
-          <label for="registerEmail">Email</label>
-          <input id="registerEmail" name="email" type="email" autocomplete="email" required />
-
-          <label for="registerPassword">Password</label>
           <input
-            id="registerPassword"
-            name="password"
-            type="password"
-            autocomplete="new-password"
-            minlength="8"
+            id="registerUsername"
+            name="username"
+            type="text"
+            autocomplete="username"
+            placeholder="Harini"
             required
           />
 
-          <button id="registerButton" class="primary-button" type="submit">Create account</button>
+          <label for="registerEmail">Email</label>
+          <input
+            id="registerEmail"
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            required
+          />
+
+          <label for="registerPassword">Password</label>
+          <div class="password-field">
+            <input
+              id="registerPassword"
+              name="password"
+              type="password"
+              autocomplete="new-password"
+              minlength="8"
+              placeholder="At least 8 characters"
+              required
+            />
+            <button
+              class="password-toggle"
+              type="button"
+              data-password-toggle="#registerPassword"
+              aria-label="Show password"
+            >
+              Show
+            </button>
+          </div>
+
+          <button id="registerButton" class="primary-button" type="submit">
+            Create account
+          </button>
         </form>
         <button class="text-button" type="button" data-auth-route="/login">
           Back to login
@@ -78,11 +152,21 @@
       </article>
 
       <article id="forgotPasswordPage" class="auth-card auth-view" hidden>
-        <p class="eyebrow">Account recovery</p>
-        <h2>Forgot Password</h2>
+        <div class="auth-card-heading">
+          <p class="eyebrow">Account recovery</p>
+          <h2>Forgot Password</h2>
+          <p>Enter your email and we will start the reset flow.</p>
+        </div>
         <form id="forgotPasswordForm" class="auth-form">
           <label for="forgotEmail">Email</label>
-          <input id="forgotEmail" name="email" type="email" autocomplete="email" required />
+          <input
+            id="forgotEmail"
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            required
+          />
           <button id="forgotPasswordButton" class="primary-button" type="submit">
             Send reset link
           </button>
@@ -101,15 +185,42 @@
         </a>
 
         <nav class="sidebar-nav" aria-label="Dashboard navigation">
-          <a href="/dashboard" data-route="dashboard">Dashboard</a>
-          <a href="/generate" data-route="generate">Generate Story</a>
-          <a href="/generate" data-route="generate">Generate Images</a>
-          <a href="/generate" data-route="generate">Generate Video</a>
-          <a href="/history-page" data-route="history">History</a>
-          <a href="/images" data-route="images">Image Library</a>
-          <a href="/videos" data-route="videos">Video Library</a>
-          <a href="/profile" data-route="profile">Profile</a>
-          <a href="/settings" data-route="settings">Settings</a>
+          <a href="/dashboard" data-route="dashboard">
+            <span class="nav-icon" aria-hidden="true">&#8962;</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="/generate" data-route="generate">
+            <span class="nav-icon" aria-hidden="true">&#10022;</span>
+            <span>Generate Story</span>
+          </a>
+          <a href="/generate" data-route="generate-images">
+            <span class="nav-icon" aria-hidden="true">&#9635;</span>
+            <span>Generate Images</span>
+          </a>
+          <a href="/generate" data-route="generate-video">
+            <span class="nav-icon" aria-hidden="true">&#9654;</span>
+            <span>Generate Video</span>
+          </a>
+          <a href="/history-page" data-route="history">
+            <span class="nav-icon" aria-hidden="true">&#9719;</span>
+            <span>History</span>
+          </a>
+          <a href="/images" data-route="images">
+            <span class="nav-icon" aria-hidden="true">&#9638;</span>
+            <span>Image Library</span>
+          </a>
+          <a href="/videos" data-route="videos">
+            <span class="nav-icon" aria-hidden="true">&#9720;</span>
+            <span>Video Library</span>
+          </a>
+          <a href="/profile" data-route="profile">
+            <span class="nav-icon" aria-hidden="true">&#9673;</span>
+            <span>Profile</span>
+          </a>
+          <a href="/settings" data-route="settings">
+            <span class="nav-icon" aria-hidden="true">&#9881;</span>
+            <span>Settings</span>
+          </a>
         </nav>
 
         <div class="sidebar-footer">
@@ -120,16 +231,19 @@
               <small id="sidebarEmail">creator@example.com</small>
             </div>
           </div>
-          <button id="logoutButton" class="secondary-button" type="button">Logout</button>
+          <button id="logoutButton" class="secondary-button logout-button" type="button">
+            Logout
+          </button>
         </div>
       </aside>
 
       <main class="saas-main">
         <section id="dashboardPage" class="app-page dashboard-page">
-          <div class="page-heading">
+          <div class="top-header">
             <div>
               <p class="eyebrow">Dashboard</p>
-              <h1 id="welcomeTitle">Welcome</h1>
+              <h1 id="welcomeTitle">Welcome back, Harini &#128075;</h1>
+              <p>Monitor stories, generated media, and recent production activity.</p>
             </div>
             <button class="primary-button" type="button" data-route-button="generate">
               Quick Generate
@@ -149,13 +263,17 @@
               <dt>Total Videos</dt>
               <dd id="totalVideos">0</dd>
             </div>
+            <div class="stat-card">
+              <dt>Storage Used</dt>
+              <dd id="storageUsed">0 MB</dd>
+            </div>
           </dl>
 
           <div class="dashboard-overview">
             <article class="dashboard-card">
               <div class="card-header">
-                <span class="card-kicker">Generation Statistics</span>
-                <span id="totalScenes" class="count-badge">0</span>
+                <span class="card-kicker">Generation Analytics</span>
+                <span id="totalScenes" class="count-badge">0 scenes</span>
               </div>
               <div id="statsChart" class="mini-chart"></div>
             </article>
@@ -184,11 +302,16 @@
         </section>
 
         <section id="generatePage" class="app-page" hidden>
-          <section id="generate" class="hero-section compact-hero">
-            <div class="hero-copy">
-              <p class="eyebrow">Generate</p>
-              <h1>CineGen AI</h1>
-              <p>Transform stories into AI generated images, narration, and MP4 video.</p>
+          <section id="generate" class="studio-hero">
+            <div>
+              <p class="eyebrow">AI Studio</p>
+              <h1>Story generation workspace</h1>
+              <p>Write a prompt, generate scene images, and render a narrated MP4.</p>
+            </div>
+            <div class="studio-hero-actions">
+              <span>Story</span>
+              <span>Images</span>
+              <span>Video</span>
             </div>
           </section>
 
@@ -197,18 +320,26 @@
               <form id="storyForm" class="story-form" onsubmit="return false;">
                 <div class="section-heading compact">
                   <div>
-                    <p class="eyebrow">Generate</p>
-                    <h2>Story Prompt</h2>
+                    <p class="eyebrow">Generate Story</p>
+                    <h2>Prompt Builder</h2>
                   </div>
                 </div>
 
-                <label for="storyInput">Story idea</label>
+                <label for="storyTitleInput">Story title</label>
+                <input
+                  id="storyTitleInput"
+                  name="story_title"
+                  type="text"
+                  placeholder="The Moonlit Harbor"
+                />
+
+                <label for="storyInput">Large prompt</label>
                 <textarea
                   id="storyInput"
                   name="story"
                   rows="12"
                   minlength="3"
-                  placeholder="Princess story, robot friendship, magical forest adventure..."
+                  placeholder="A young inventor discovers a glowing compass and follows it into a floating city..."
                   required
                 ></textarea>
 
@@ -217,31 +348,48 @@
                   <p id="storyError" class="field-error" hidden></p>
                 </div>
 
-                <div class="toolbar">
-                  <div class="generation-options">
-                    <label class="switch-row" for="textOnlyToggle">
-                      <input id="textOnlyToggle" name="text_only" type="checkbox" />
-                      <span class="switch" aria-hidden="true"></span>
-                      <span>Text only</span>
-                    </label>
+                <div class="prompt-insights" aria-label="Prompt insights">
+                  <span><strong id="characterCount">0</strong> characters</span>
+                  <span><strong id="estimatedSceneCount">1</strong> estimated scenes</span>
+                </div>
 
-                    <label class="duration-field" for="targetDurationInput">
-                      <span>Video length</span>
-                      <input
-                        id="targetDurationInput"
-                        name="target_duration_seconds"
-                        type="number"
-                        min="10"
-                        max="120"
-                        step="5"
-                        value="30"
-                      />
-                      <span>sec</span>
-                    </label>
-                  </div>
+                <div class="form-grid">
+                  <label for="storyStyleSelect">
+                    <span>Story style</span>
+                    <select id="storyStyleSelect" name="story_style">
+                      <option value="fantasy">Fantasy</option>
+                      <option value="sci-fi">Sci-Fi</option>
+                      <option value="realistic">Realistic</option>
+                      <option value="anime">Anime</option>
+                      <option value="cinematic">Cinematic</option>
+                      <option value="pixar">Pixar</option>
+                      <option value="disney">Disney</option>
+                    </select>
+                  </label>
+
+                  <label class="duration-field" for="targetDurationInput">
+                    <span>Video duration</span>
+                    <input
+                      id="targetDurationInput"
+                      name="target_duration_seconds"
+                      type="number"
+                      min="10"
+                      max="120"
+                      step="5"
+                      value="30"
+                    />
+                  </label>
+                </div>
+
+                <div class="toolbar">
+                  <label class="switch-row" for="textOnlyToggle">
+                    <input id="textOnlyToggle" name="text_only" type="checkbox" />
+                    <span class="switch" aria-hidden="true"></span>
+                    <span>Text only</span>
+                  </label>
 
                   <button id="generateButton" class="primary-button" type="button">
-                    <span class="button-label">Generate</span>
+                    <span class="button-label">Generate Story</span>
                     <span class="button-spinner" aria-hidden="true"></span>
                   </button>
                 </div>
@@ -260,8 +408,8 @@
                   <li data-step="scenes">Scene Extraction</li>
                   <li data-step="prompts">Prompt Generation</li>
                   <li data-step="images">Image Generation</li>
-                  <li data-step="narration">Narration</li>
-                  <li data-step="video">Video Generation</li>
+                  <li data-step="narration">Generating narration...</li>
+                  <li data-step="video">Rendering video...</li>
                   <li data-step="completed">Completed</li>
                 </ol>
               </div>
@@ -270,21 +418,27 @@
             <section class="results-panel" aria-live="polite">
               <div class="section-heading">
                 <div>
-                  <p class="eyebrow">Result Dashboard</p>
+                  <p class="eyebrow">Generated Story</p>
                   <h2 id="resultTitle">Ready</h2>
                 </div>
                 <div class="result-actions">
+                  <button id="copyStoryButton" class="secondary-button" type="button">
+                    Copy
+                  </button>
                   <button id="downloadJsonButton" class="secondary-button" type="button" disabled>
                     Download JSON
                   </button>
-                  <button id="downloadImagesButton" class="secondary-button" type="button" disabled>
-                    Download Generated Images
-                  </button>
                   <button id="downloadStoryButton" class="secondary-button" type="button" disabled>
-                    Download Story Results
+                    Download Story
+                  </button>
+                  <button id="downloadImagesButton" class="secondary-button" type="button" disabled>
+                    Download Images
                   </button>
                   <button id="downloadVideoButton" class="secondary-button" type="button" disabled>
                     Download MP4
+                  </button>
+                  <button class="secondary-button" type="button" data-route-button="generate">
+                    Regenerate
                   </button>
                 </div>
               </div>
@@ -292,7 +446,8 @@
               <div class="dashboard-grid">
                 <article class="dashboard-card story-card">
                   <div class="card-header">
-                    <span class="card-kicker">Story Card</span>
+                    <span class="card-kicker">Story</span>
+                    <span class="count-badge">Draft</span>
                   </div>
                   <p id="storyPreview" class="story-preview">
                     Generated story details will appear here.
@@ -301,7 +456,7 @@
 
                 <article class="dashboard-card">
                   <div class="card-header">
-                    <span class="card-kicker">Scenes Card</span>
+                    <span class="card-kicker">Scene Cards</span>
                     <span id="sceneCount" class="count-badge">0</span>
                   </div>
                   <div id="scenesList" class="stack-list empty-state">
@@ -311,7 +466,7 @@
 
                 <article class="dashboard-card">
                   <div class="card-header">
-                    <span class="card-kicker">Prompts Card</span>
+                    <span class="card-kicker">Visual Briefs</span>
                     <span id="promptCount" class="count-badge">0</span>
                   </div>
                   <div id="promptsList" class="stack-list empty-state">
@@ -321,7 +476,7 @@
 
                 <article class="dashboard-card images-card">
                   <div class="card-header">
-                    <span class="card-kicker">Generated Images Card</span>
+                    <span class="card-kicker">AI Image Gallery</span>
                     <span id="imageCount" class="count-badge">0</span>
                   </div>
                   <div id="imagesGallery" class="image-grid empty-state" aria-live="polite">
@@ -331,8 +486,15 @@
 
                 <article class="dashboard-card video-card">
                   <div class="card-header">
-                    <span class="card-kicker">Generated Video</span>
+                    <span class="card-kicker">Video Generation</span>
                     <span id="videoStatusBadge" class="count-badge">0:00</span>
+                  </div>
+                  <div class="video-progress-shell">
+                    <div class="video-progress-bar" aria-hidden="true"><span></span></div>
+                    <div class="video-progress-meta">
+                      <span>Current step: <strong>Ready</strong></span>
+                      <span>Estimated remaining: <strong>--</strong></span>
+                    </div>
                   </div>
                   <div id="videoPanel" class="video-panel empty-state" aria-live="polite">
                     <p>No video generated yet.</p>
@@ -425,11 +587,11 @@
                 <span class="card-kicker">Update Profile</span>
               </div>
               <form id="profileForm" class="settings-form">
-                <label for="profileUsername">Username</label>
+                <label for="profileUsername">Name</label>
                 <input id="profileUsername" name="username" type="text" />
                 <label for="profileEmailInput">Email</label>
                 <input id="profileEmailInput" name="email" type="email" />
-                <label for="profilePictureInput">Profile picture URL</label>
+                <label for="profilePictureInput">Avatar upload URL</label>
                 <input id="profilePictureInput" name="profile_picture" type="url" />
                 <button class="primary-button" type="submit">Update Profile</button>
               </form>
@@ -437,7 +599,7 @@
 
             <article class="dashboard-card">
               <div class="card-header">
-                <span class="card-kicker">Change Password</span>
+                <span class="card-kicker">Password Change</span>
               </div>
               <form id="passwordForm" class="settings-form">
                 <label for="currentPasswordInput">Current password</label>
@@ -462,8 +624,8 @@
             <form id="settingsForm" class="settings-grid">
               <label for="themeSelect">Theme</label>
               <select id="themeSelect" name="theme">
-                <option value="dark">Dark Mode</option>
                 <option value="light">Light Mode</option>
+                <option value="dark">Dark Mode</option>
               </select>
 
               <label for="languageSelect">Language</label>
@@ -473,14 +635,14 @@
                 <option value="es">Spanish</option>
               </select>
 
-              <label for="voiceSelect">Voice Selection</label>
+              <label for="voiceSelect">Default voice</label>
               <select id="voiceSelect" name="voice_selection">
                 <option value="en-US-GuyNeural">en-US-GuyNeural</option>
                 <option value="en-US-JennyNeural">en-US-JennyNeural</option>
                 <option value="en-IN-NeerjaNeural">en-IN-NeerjaNeural</option>
               </select>
 
-              <label for="imageProviderSelect">Image Provider</label>
+              <label for="imageProviderSelect">Default image provider</label>
               <select id="imageProviderSelect" name="image_provider">
                 <option value="pollinations">Pollinations</option>
                 <option value="fal">fal.ai</option>
@@ -488,10 +650,28 @@
                 <option value="storyboard">Storyboard</option>
               </select>
 
+              <label for="imageQualitySelect">Image quality</label>
+              <select id="imageQualitySelect" name="image_quality">
+                <option value="standard">Standard</option>
+                <option value="high">High</option>
+              </select>
+
+              <label for="videoQualitySelect">Video quality</label>
+              <select id="videoQualitySelect" name="video_quality">
+                <option value="standard">Standard</option>
+                <option value="high">High</option>
+              </select>
+
               <label class="switch-row settings-toggle" for="backgroundMusicToggle">
                 <input id="backgroundMusicToggle" name="background_music_enabled" type="checkbox" />
                 <span class="switch" aria-hidden="true"></span>
                 <span>Background Music</span>
+              </label>
+
+              <label class="switch-row settings-toggle" for="notificationsToggle">
+                <input id="notificationsToggle" name="notifications_enabled" type="checkbox" checked />
+                <span class="switch" aria-hidden="true"></span>
+                <span>Notification settings</span>
               </label>
 
               <button class="primary-button" type="submit">Save Settings</button>

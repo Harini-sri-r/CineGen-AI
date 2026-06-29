@@ -3,6 +3,7 @@ const FALLBACK_API_BASE_URLS = ["http://127.0.0.1:8003"];
 const API_BASE_URLS = [DEFAULT_API_BASE_URL, ...FALLBACK_API_BASE_URLS];
 const API_DISCOVERY_TIMEOUT_MS = 2500;
 const GENERATE_ENDPOINT = "/generate-story";
+const GENERATE_IMAGE_ENDPOINT = "/generate-image";
 const GENERATE_VIDEO_ENDPOINT = "/generate-video";
 const HISTORY_ENDPOINT = "/history";
 const HISTORY_STATS_ENDPOINT = "/history/stats";
@@ -31,6 +32,44 @@ const ACCESS_TOKEN_KEY = "cinegen_access_token";
 const REFRESH_TOKEN_KEY = "cinegen_refresh_token";
 const REMEMBER_SESSION_KEY = "cinegen_remember_session";
 const DEFAULT_THEME = "light";
+const VISUAL_BRIEF_STOP_MARKERS = [
+  ", children's animated storybook illustration",
+  ", 2D cartoon style",
+  ", bright cheerful colors",
+  ", soft rounded shapes",
+  ", simple expressive characters",
+  ", story-specific background details",
+  ", warm child-safe mood",
+  ", clear subject focus",
+  ", safe and wholesome",
+  ", no photorealism",
+  ", no live action",
+  ", no real people",
+  ", no documentary photography",
+  ", no realistic street photo",
+  ", no abstract patterns",
+  ", no glitch artifacts",
+  ", no distorted subjects",
+  ", no scary imagery",
+  ", no violence",
+  ", no text",
+  ", no watermark",
+  ", no unrelated",
+];
+const INTERNAL_PROMPT_FRAGMENTS = [
+  "children's animated storybook illustration",
+  "2d cartoon style",
+  "bright cheerful colors",
+  "soft rounded shapes",
+  "simple expressive characters",
+  "story-specific background details",
+  "warm child-safe mood",
+  "clear subject focus",
+  "safe and wholesome",
+  "setting:",
+  "main character:",
+  "no ",
+];
 
 const authShell = document.querySelector("#authShell");
 const appShell = document.querySelector("#appShell");
@@ -47,6 +86,7 @@ const sidebarEmail = document.querySelector("#sidebarEmail");
 const sidebarAvatar = document.querySelector("#sidebarAvatar");
 const welcomeTitle = document.querySelector("#welcomeTitle");
 const totalVideos = document.querySelector("#totalVideos");
+const storageUsed = document.querySelector("#storageUsed");
 const recentStories = document.querySelector("#recentStories");
 const latestActivity = document.querySelector("#latestActivity");
 const statsChart = document.querySelector("#statsChart");
@@ -78,9 +118,13 @@ const imageProviderSelect = document.querySelector("#imageProviderSelect");
 const backgroundMusicToggle = document.querySelector("#backgroundMusicToggle");
 
 const storyForm = document.querySelector("#storyForm");
+const storyTitleInput = document.querySelector("#storyTitleInput");
 const storyInput = document.querySelector("#storyInput");
 const storyHelp = document.querySelector("#storyHelp");
 const storyError = document.querySelector("#storyError");
+const storyStyleSelect = document.querySelector("#storyStyleSelect");
+const characterCount = document.querySelector("#characterCount");
+const estimatedSceneCount = document.querySelector("#estimatedSceneCount");
 const textOnlyToggle = document.querySelector("#textOnlyToggle");
 const targetDurationInput = document.querySelector("#targetDurationInput");
 const generateButton = document.querySelector("#generateButton");
@@ -100,6 +144,7 @@ const imageCount = document.querySelector("#imageCount");
 const totalStories = document.querySelector("#totalStories");
 const totalScenes = document.querySelector("#totalScenes");
 const totalImages = document.querySelector("#totalImages");
+const copyStoryButton = document.querySelector("#copyStoryButton");
 const downloadJsonButton = document.querySelector("#downloadJsonButton");
 const downloadImagesButton = document.querySelector("#downloadImagesButton");
 const downloadStoryButton = document.querySelector("#downloadStoryButton");
@@ -130,6 +175,7 @@ let currentHistoryPage = 1;
 storyInput.addEventListener("input", () => {
   validateStory({ showErrors: false });
 });
+storyStyleSelect?.addEventListener("change", updateStoryStylePlaceholder);
 
 storyForm.addEventListener("submit", handleStoryGeneration);
 generateButton.addEventListener("click", handleStoryGeneration);
@@ -147,13 +193,31 @@ historySearchInput.addEventListener("input", debounce(() => {
   refreshHistory({ silent: true, page: 1 });
 }, 260));
 
+document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+  button.addEventListener("click", () => togglePasswordVisibility(button));
+});
+
+copyStoryButton?.addEventListener("click", async () => {
+  if (!latestResult?.story) {
+    showToast("No story available to copy.", "error");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(latestResult.story);
+    showToast("Story copied.", "success");
+  } catch {
+    showToast(latestResult.story, "success");
+  }
+});
+
 downloadJsonButton.addEventListener("click", () => {
   if (!latestResult) {
     return;
   }
 
   const fileName = latestResult.file_name || "cinegen-output.json";
-  downloadJson(latestResult, fileName);
+  downloadJson(buildPublicStoryExport(latestResult), fileName);
   showToast("JSON output downloaded.", "success");
 });
 
@@ -239,6 +303,7 @@ initializeApp();
 async function initializeApp() {
   applyTheme(DEFAULT_THEME);
   validateStory({ showErrors: false });
+  updateStoryStylePlaceholder();
   setResultsVisible(true);
   resetProgress();
 
@@ -434,6 +499,8 @@ function showAppRoute(route, { push = true } = {}) {
   const pageIdByRoute = {
     dashboard: "dashboardPage",
     generate: "generatePage",
+    "generate-images": "generatePage",
+    "generate-video": "generatePage",
     history: "history",
     images: "imageLibraryPage",
     videos: "videoLibraryPage",
@@ -450,6 +517,8 @@ function showAppRoute(route, { push = true } = {}) {
   const pathByRoute = {
     dashboard: "/dashboard",
     generate: "/generate",
+    "generate-images": "/generate",
+    "generate-video": "/generate",
     history: "/history-page",
     images: "/images",
     videos: "/videos",
@@ -511,7 +580,7 @@ function updateUserChrome() {
   sidebarUsername.textContent = username;
   sidebarEmail.textContent = email;
   sidebarAvatar.textContent = username.charAt(0).toUpperCase() || "C";
-  welcomeTitle.textContent = `Welcome, ${username}`;
+  welcomeTitle.textContent = `Welcome back, ${username} \u{1F44B}`;
 }
 
 async function fetchJson(url, options = {}, authOptions = {}) {
@@ -834,6 +903,9 @@ function renderStats(stats) {
   if (totalVideos) {
     totalVideos.textContent = stats.total_videos ?? 0;
   }
+  if (storageUsed) {
+    storageUsed.textContent = estimateStorageUsed(stats);
+  }
   if (statsChart) {
     const values = [
       ["Stories", stats.total_stories || 0],
@@ -854,6 +926,19 @@ function renderStats(stats) {
       })
     );
   }
+}
+
+function estimateStorageUsed(stats) {
+  const imageCount = Number(stats.total_images || 0);
+  const videoCount = Number(stats.total_videos || 0);
+  const storyCount = Number(stats.total_stories || 0);
+  const estimatedMegabytes = imageCount * 1.8 + videoCount * 18 + storyCount * 0.08;
+
+  if (estimatedMegabytes >= 1024) {
+    return `${(estimatedMegabytes / 1024).toFixed(1)} GB`;
+  }
+
+  return `${estimatedMegabytes.toFixed(1)} MB`;
 }
 
 function renderRecentStories(items) {
@@ -1128,22 +1213,29 @@ function renderImageLibrary(items) {
       frame.append(createPlaceholder("Image unavailable"));
     }
     const copy = createElement("div", "image-copy");
+    const visualBrief = formatVisualBrief(item.prompt, "");
     copy.append(
       createKicker(`Scene ${item.scene_number}`),
-      createTextElement("p", "image-title", item.title),
-      createTextElement("p", "image-prompt", item.prompt || "Prompt unavailable."),
-      createStatus(item.status)
+      createTextElement("p", "image-title", item.title)
     );
+    if (visualBrief) {
+      copy.append(createTextElement("p", "image-prompt", visualBrief));
+    }
+    copy.append(createStatus(item.status));
     const actions = createElement("div", "image-actions");
     const download = createElement("button", "secondary-button", "Download");
     download.type = "button";
     download.addEventListener("click", () =>
       downloadImage({ image_url: item.image_url || item.image_path })
     );
+    const open = createElement("a", "secondary-button button-link", "Open");
+    open.href = item.image_url || item.image_path || "#";
+    open.target = "_blank";
+    open.rel = "noopener";
     const remove = createElement("button", "secondary-button danger-button", "Delete");
     remove.type = "button";
     remove.addEventListener("click", () => deleteImage(item.image_id));
-    actions.append(download, remove);
+    actions.append(download, open, remove);
     card.append(frame, copy, actions);
     imageLibraryGrid.append(card);
   });
@@ -1358,7 +1450,9 @@ function normalizeTheme(theme) {
 }
 
 function applyTheme(theme) {
-  document.body.classList.toggle("light-mode", normalizeTheme(theme) === "light");
+  const normalizedTheme = normalizeTheme(theme);
+  document.body.classList.toggle("light-mode", normalizedTheme === "light");
+  document.body.classList.toggle("dark-mode", normalizedTheme === "dark");
 }
 
 function normalizeResult(data, { source, fileName, createdAt = "" }) {
@@ -1481,7 +1575,7 @@ async function generateVideoForLatestResult() {
 
   isVideoGenerating = true;
   setProgressStep("narration");
-  updateProcessingMessage("Narration");
+  updateProcessingMessage("Generating narration...");
 
   try {
     const { response, data } = await fetchJson(GENERATE_VIDEO_ENDPOINT, {
@@ -1677,10 +1771,37 @@ function renderScenes(scenes) {
 
   scenesList.classList.remove("empty-state");
   const fragment = document.createDocumentFragment();
+  const promptsById = new Map((latestResult?.prompts || []).map((prompt) => [prompt.scene, prompt]));
+  const imagesById = buildImagesByScene(latestResult?.images || []);
 
   scenes.forEach((scene) => {
     const card = createStackItem();
-    card.append(createKicker(`Scene ${scene.scene}`), createParagraph(scene.description));
+    const image = imagesById.get(scene.scene);
+    const prompt = promptsById.get(scene.scene);
+    const header = createElement("div", "scene-card-header");
+    header.append(
+      createKicker(`Scene ${scene.scene}`),
+      createStatus(image?.status || (prompt ? "ready" : "skipped"))
+    );
+
+    const title = createTextElement("h3", "scene-title", getSceneTitle(scene));
+    const description = createParagraph(scene.description);
+    const actions = createElement("div", "scene-actions");
+    const generateImageButton = createElement(
+      "button",
+      "secondary-button",
+      image?.status === "success" ? "Regenerate Image" : "Generate Image"
+    );
+    generateImageButton.type = "button";
+    generateImageButton.disabled = !prompt || isStoryGenerating || isVideoGenerating;
+    generateImageButton.addEventListener("click", () => generateSceneImage(scene.scene));
+
+    const regenerateButton = createElement("button", "secondary-button", "Regenerate");
+    regenerateButton.type = "button";
+    regenerateButton.addEventListener("click", handleStoryGeneration);
+
+    actions.append(generateImageButton, regenerateButton);
+    card.append(header, title, description, actions);
     fragment.append(card);
   });
 
@@ -1700,11 +1821,133 @@ function renderPrompts(prompts) {
 
   prompts.forEach((prompt) => {
     const card = createStackItem();
-    card.append(createKicker(`Prompt ${prompt.scene}`), createParagraph(prompt.prompt));
+    card.append(
+      createKicker(`Visual Brief ${prompt.scene}`),
+      createParagraph(formatVisualBrief(prompt.prompt))
+    );
     fragment.append(card);
   });
 
   promptsList.append(fragment);
+}
+
+function getSceneTitle(scene) {
+  const description = String(scene.description || `Scene ${scene.scene}`).trim();
+  const words = description.split(/\s+/).slice(0, 7).join(" ");
+  return words.length < description.length ? `${words}...` : words;
+}
+
+async function generateSceneImage(sceneNumber) {
+  if (!latestResult || isStoryGenerating || isVideoGenerating) {
+    return;
+  }
+
+  const prompt = (latestResult.prompts || []).find((item) => item.scene === sceneNumber);
+  if (!prompt?.prompt) {
+    showToast("No visual brief is available for this scene.", "error");
+    return;
+  }
+
+  const previousImages = latestResult.images || [];
+  latestResult = {
+    ...latestResult,
+    images: [
+      ...previousImages.filter((image) => image.scene !== sceneNumber),
+      {
+        scene: sceneNumber,
+        status: "generating",
+        image_path: null,
+        image_url: null,
+        provider: null,
+        warning: null,
+        error: null,
+      },
+    ],
+  };
+  renderResult(latestResult);
+
+  try {
+    const { response, data } = await fetchJson(GENERATE_IMAGE_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scene: sceneNumber,
+        prompt: prompt.prompt,
+        file_name: latestResult.file_name || null,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(data, response.status));
+    }
+
+    latestResult = normalizeResult(
+      {
+        ...latestResult,
+        images: [
+          ...(latestResult.images || []).filter((image) => image.scene !== sceneNumber),
+          data,
+        ],
+      },
+      {
+        source: latestResult.source || "generated",
+        fileName: latestResult.file_name || "cinegen-output.json",
+        createdAt: latestResult.created_at || "",
+      }
+    );
+    renderResult(latestResult);
+    await Promise.all([
+      refreshDashboard(),
+      refreshImageLibrary(),
+      refreshHistory({ silent: true }),
+    ]);
+    showToast("Scene image generated.", "success");
+  } catch (error) {
+    latestResult = normalizeResult(
+      {
+        ...latestResult,
+        images: [
+          ...(latestResult.images || []).filter((image) => image.scene !== sceneNumber),
+          {
+            scene: sceneNumber,
+            status: "failed",
+            image_path: null,
+            image_url: null,
+            provider: null,
+            warning: null,
+            error: getRequestErrorMessage(error),
+          },
+        ],
+      },
+      {
+        source: latestResult.source || "generated",
+        fileName: latestResult.file_name || "cinegen-output.json",
+        createdAt: latestResult.created_at || "",
+      }
+    );
+    renderResult(latestResult);
+    showToast(getRequestErrorMessage(error), "error");
+  }
+}
+
+function removeImageFromCurrentResult(sceneNumber) {
+  if (!latestResult) {
+    return;
+  }
+
+  latestResult = normalizeResult(
+    {
+      ...latestResult,
+      images: (latestResult.images || []).filter((image) => image.scene !== sceneNumber),
+    },
+    {
+      source: latestResult.source || "generated",
+      fileName: latestResult.file_name || "cinegen-output.json",
+      createdAt: latestResult.created_at || "",
+    }
+  );
+  renderResult(latestResult);
+  showToast("Image removed from this view.", "success");
 }
 
 function renderImages(data) {
@@ -1792,14 +2035,17 @@ function renderImages(data) {
     }
 
     const copy = createElement("div", "image-copy");
+    const visualBrief = formatVisualBrief(prompt?.prompt, "");
     copy.append(
       createTextElement(
         "p",
         "image-title",
         scene?.description || `Scene ${cardSource.scene}`
-      ),
-      createTextElement("p", "image-prompt", prompt?.prompt || "Prompt unavailable.")
+      )
     );
+    if (visualBrief) {
+      copy.append(createTextElement("p", "image-prompt", visualBrief));
+    }
 
     card.append(frame, meta, copy);
 
@@ -1840,6 +2086,19 @@ function renderImages(data) {
       openLink.rel = "noopener";
 
       actions.append(downloadButton, openLink);
+    }
+
+    const regenerateButton = createElement("button", "secondary-button", "Regenerate");
+    regenerateButton.type = "button";
+    regenerateButton.disabled = !prompt?.prompt || image.status === "generating";
+    regenerateButton.addEventListener("click", () => generateSceneImage(cardSource.scene));
+    actions.append(regenerateButton);
+
+    if (image.status === "success" || image.status === "failed") {
+      const deleteButton = createElement("button", "secondary-button danger-button", "Delete");
+      deleteButton.type = "button";
+      deleteButton.addEventListener("click", () => removeImageFromCurrentResult(cardSource.scene));
+      actions.append(deleteButton);
     }
 
     if (actions.childElementCount > 0) {
@@ -1936,9 +2195,14 @@ function renderVideo(data) {
   if (canGenerateVideo(data)) {
     videoStatusBadge.textContent = "Ready";
     videoPanel.classList.add("video-ready-state");
+    const narrationButton = createElement("button", "secondary-button", "Generate Narration");
+    narrationButton.type = "button";
+    narrationButton.disabled = true;
+    const actions = createElement("div", "video-actions");
+    actions.append(narrationButton, createGenerateVideoButton(data, "Generate Video"));
     videoPanel.append(
-      createTextElement("p", "", "Images are ready for MP4 generation."),
-      createGenerateVideoButton(data, "Generate MP4")
+      createTextElement("p", "", "Images are ready for narration and MP4 rendering."),
+      actions
     );
     return;
   }
@@ -1978,6 +2242,7 @@ function validateStory({ showErrors }) {
   storyError.hidden = isValid || !showErrors;
   storyError.textContent = message;
   storyHelp.textContent = `${story.length}/${MIN_STORY_LENGTH} characters minimum`;
+  updateStoryMetrics(story);
 
   if (!isValid && showErrors) {
     showStatus({
@@ -1989,6 +2254,46 @@ function validateStory({ showErrors }) {
   }
 
   return isValid;
+}
+
+function updateStoryMetrics(story) {
+  if (characterCount) {
+    characterCount.textContent = String(story.length);
+  }
+  if (estimatedSceneCount) {
+    estimatedSceneCount.textContent = String(estimateSceneCount(story));
+  }
+}
+
+function updateStoryStylePlaceholder() {
+  if (!storyStyleSelect || !storyInput) {
+    return;
+  }
+
+  const placeholderByStyle = {
+    fantasy: "A young inventor discovers a glowing compass and follows it into a floating city...",
+    "sci-fi": "A robot child finds a lost signal coming from a garden on Mars...",
+    realistic: "A quiet student starts a community project that changes their neighborhood...",
+    anime: "Two rivals enter a sky academy tournament and uncover a hidden friendship...",
+    cinematic: "A lighthouse keeper races against a storm to guide a vanished ship home...",
+    pixar: "A tiny kitchen gadget dreams of becoming the hero of a family dinner...",
+    disney: "A brave child follows a singing star through a moonlit kingdom...",
+  };
+
+  storyInput.placeholder =
+    placeholderByStyle[storyStyleSelect.value] || placeholderByStyle.fantasy;
+}
+
+function togglePasswordVisibility(button) {
+  const input = document.querySelector(button.dataset.passwordToggle || "");
+  if (!input) {
+    return;
+  }
+
+  const isPassword = input.type === "password";
+  input.type = isPassword ? "text" : "password";
+  button.textContent = isPassword ? "Hide" : "Show";
+  button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
 }
 
 function getTargetDurationSeconds() {
@@ -2044,9 +2349,9 @@ function buildProgressSteps({ imagesRequested, imageCount, videoRequested = fals
 
   if (videoRequested) {
     baseSteps.push(
-      { key: "narration", label: "Narration" },
-      { key: "audio", label: "Generating audio..." },
-      { key: "video", label: "Video Generation" },
+      { key: "narration", label: "Generating narration..." },
+      { key: "audio", label: "Creating transitions..." },
+      { key: "video", label: "Rendering video..." },
       { key: "encoding", label: "Encoding MP4..." }
     );
   }
@@ -2188,6 +2493,12 @@ function setLoading(isLoading) {
   generateButton.classList.toggle("is-loading", isLoading);
   generateButton.setAttribute("aria-busy", String(isLoading));
   storyInput.disabled = isLoading;
+  if (storyTitleInput) {
+    storyTitleInput.disabled = isLoading;
+  }
+  if (storyStyleSelect) {
+    storyStyleSelect.disabled = isLoading;
+  }
   textOnlyToggle.disabled = isLoading;
   if (targetDurationInput) {
     targetDurationInput.disabled = isLoading;
@@ -2212,6 +2523,9 @@ function setResultsVisible(isVisible) {
 }
 
 function setResultActionsEnabled(isEnabled) {
+  if (copyStoryButton) {
+    copyStoryButton.disabled = !isEnabled;
+  }
   downloadJsonButton.disabled = !isEnabled;
   downloadStoryButton.disabled = !isEnabled;
   downloadImagesButton.disabled = true;
@@ -2243,6 +2557,91 @@ function createParagraph(text) {
 
 function createTextElement(tagName, className, text) {
   return createElement(tagName, className, text || "");
+}
+
+function formatVisualBrief(promptText, fallbackText = "Visual brief unavailable.") {
+  const prompt = normalizePromptText(promptText);
+  if (!prompt) {
+    return fallbackText;
+  }
+
+  const sceneText = extractPromptSegment(prompt, "Scene must clearly show:", [
+    ", Background:",
+    ", Setting:",
+    ", Main character:",
+    ...VISUAL_BRIEF_STOP_MARKERS,
+  ]);
+  const backgroundText = extractPromptSegment(prompt, "Background:", [
+    ", Setting:",
+    ", Main character:",
+    ...VISUAL_BRIEF_STOP_MARKERS,
+  ]);
+
+  const lines = [];
+  if (sceneText) {
+    lines.push(`Visual: ${trimSentence(sceneText)}`);
+  }
+  if (backgroundText) {
+    lines.push(`Setting: ${trimSentence(backgroundText)}`);
+  }
+
+  if (lines.length > 0) {
+    return lines.join(" ");
+  }
+
+  const publicText = stripInternalPromptText(prompt);
+  return publicText || fallbackText;
+}
+
+function normalizePromptText(promptText) {
+  return String(promptText || "").replace(/\s+/g, " ").trim();
+}
+
+function extractPromptSegment(prompt, label, stopMarkers) {
+  const startIndex = prompt.indexOf(label);
+  if (startIndex === -1) {
+    return "";
+  }
+
+  const contentStart = startIndex + label.length;
+  const stopIndex = stopMarkers.reduce((earliestIndex, marker) => {
+    const markerIndex = prompt.indexOf(marker, contentStart);
+    if (markerIndex === -1) {
+      return earliestIndex;
+    }
+
+    return earliestIndex === -1 ? markerIndex : Math.min(earliestIndex, markerIndex);
+  }, -1);
+  const content =
+    stopIndex === -1
+      ? prompt.slice(contentStart)
+      : prompt.slice(contentStart, stopIndex);
+
+  return content.trim().replace(/^[,\s]+|[,\s]+$/g, "");
+}
+
+function stripInternalPromptText(prompt) {
+  return prompt
+    .replaceAll("Scene must clearly show:", "")
+    .replaceAll("Background:", "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part && !isInternalPromptFragment(part))
+    .slice(0, 2)
+    .map(trimSentence)
+    .join(" ");
+}
+
+function isInternalPromptFragment(part) {
+  const normalizedPart = part.toLowerCase();
+  return INTERNAL_PROMPT_FRAGMENTS.some((fragment) =>
+    normalizedPart.startsWith(fragment)
+  );
+}
+
+function trimSentence(text) {
+  const trimmedText = text.trim().replace(/[.!?;:]+$/g, "");
+  return trimmedText ? `${trimmedText}.` : "";
 }
 
 function createStatus(status) {
@@ -2637,6 +3036,16 @@ function downloadBlob(blob, fileName) {
   URL.revokeObjectURL(url);
 }
 
+function buildPublicStoryExport(data) {
+  return {
+    ...data,
+    prompts: (data.prompts || []).map((prompt) => ({
+      ...prompt,
+      prompt: formatVisualBrief(prompt.prompt, ""),
+    })),
+  };
+}
+
 function buildStoryResultsText(data) {
   const lines = [
     "CineGen AI Story Results",
@@ -2647,8 +3056,10 @@ function buildStoryResultsText(data) {
     "Scenes:",
     ...data.scenes.map((scene) => `${scene.scene}. ${scene.description}`),
     "",
-    "Prompts:",
-    ...data.prompts.map((prompt) => `${prompt.scene}. ${prompt.prompt}`),
+    "Visual Briefs:",
+    ...data.prompts.map(
+      (prompt) => `${prompt.scene}. ${formatVisualBrief(prompt.prompt, "")}`
+    ),
     "",
     "Images:",
     ...data.images.map((image) =>
