@@ -6,12 +6,6 @@
 
 Transform your ideas into cinematic videos using AI-powered story understanding, scene generation, image synthesis, narration, and video rendering.
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green?logo=fastapi)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue?logo=postgresql)
-![JavaScript](https://img.shields.io/badge/Frontend-HTML%20%7C%20CSS%20%7C%20JS-orange)
-![License](https://img.shields.io/badge/License-MIT-success)
-
 </div>
 
 ---
