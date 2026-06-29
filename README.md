@@ -24,27 +24,13 @@ CineGen AI is a full-stack AI application that transforms text stories into cine
 
 ## 📸 Screenshots
 
-### 🏠 Dashboard
+![Dashboard](screenshots/dashboard.png?v=2)
 
-![Dashboard](screenshots/dashboard.png)
+![Story Generation](screenshots/generation.png?v=2)
 
----
+![History](screenshots/history.png?v=2)
 
-### ✨ Story Generation
-
-![Story Generation](screenshots/generation.png)
-
----
-
-### 📂 Generation History
-
-![History](screenshots/history.png)
-
----
-
-### ⚙️ Settings
-
-![Settings](screenshots/settings.png)
+![Settings](screenshots/settings.png?v=2)
 
 ---
 
