@@ -17,22 +17,18 @@ An AI-powered web application that transforms text stories into cinematic videos
 
 ---
 
-## 🖼️ Screenshots
+## 📸 Screenshots
 
 ### Dashboard
-
 ![Dashboard](screenshots/dashboard.png)
 
 ### Story Generation
-
 ![Story Generation](screenshots/generation.png)
 
-### Generation History
-
+### History
 ![History](screenshots/history.png)
 
 ### Settings
-
 ![Settings](screenshots/settings.png)
 
 ---
